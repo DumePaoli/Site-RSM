@@ -464,12 +464,12 @@ export default function HomePage() {
                     <h3 className="text-white font-bold text-lg mb-1">{p.name}</h3>
                     <p className="text-surface-500 text-sm">{p.description}</p>
                   </div>
-                  <div className="mb-8">
+                  <div className="h-20 flex items-end mb-8">
                     <span className={`text-5xl font-black ${highlight ? 'text-rust-400' : 'text-white'}`}>
                       {p.price.toFixed(2).replace('.', ',')} €
                     </span>
                     {p.duration !== 'lifetime' && (
-                      <span className="text-surface-400 text-sm ml-1">
+                      <span className="text-surface-400 text-sm ml-1.5 mb-1 whitespace-nowrap">
                         {p.duration === '1m' ? t('pricing.month', lang) : t('pricing.3month', lang)}
                       </span>
                     )}
