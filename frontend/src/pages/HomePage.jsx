@@ -271,6 +271,14 @@ export default function HomePage() {
   const { lang } = useLang()
   const [products, setProducts] = useState([])
   const [activeFeature, setActiveFeature] = useState(0)
+  const [version, setVersion] = useState('v1.1.24')
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest')
+      .then(r => r.json())
+      .then(d => { if (d.tag_name) setVersion(d.tag_name) })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     getProducts().then(setProducts).catch(() => setProducts([
@@ -314,7 +322,7 @@ export default function HomePage() {
         <div className="relative max-w-6xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs text-surface-400 mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            {t('hero.badge', lang)}
+            {t('hero.badge', lang).replace('{version}', version)}
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[1.05] mb-6">

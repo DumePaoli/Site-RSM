@@ -11,7 +11,7 @@ const translations = {
     'nav.logout':     'Déconnexion',
 
     // Hero
-    'hero.badge':     'Windows 10/11 · Carbon & Oxide · v1.1.24',
+    'hero.badge':     'Windows 10/11 · Carbon & Oxide · {version}',
     'hero.title1':    'Your Server,',
     'hero.title2':    'Your Rules.',
     'hero.sub':       'Interface Windows tout-en-un pour admins sérieux. Démarrage, RCON, sauvegardes, wipes planifiés, Discord bot — sans ligne de commande.',
@@ -175,7 +175,7 @@ const translations = {
     'nav.logout':     'Logout',
 
     // Hero
-    'hero.badge':     'Windows 10/11 · Carbon & Oxide · v1.1.24',
+    'hero.badge':     'Windows 10/11 · Carbon & Oxide · {version}',
     'hero.title1':    'Your Server,',
     'hero.title2':    'Your Rules.',
     'hero.sub':       'All-in-one Windows interface for serious admins. Server start, RCON, backups, scheduled wipes, Discord bot — no command line needed.',
