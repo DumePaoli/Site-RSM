@@ -460,16 +460,16 @@ export default function HomePage() {
                       {badge}
                     </div>
                   )}
-                  <div className="mb-6">
+                  <div className="h-16 mb-6">
                     <h3 className="text-white font-bold text-lg mb-1">{p.name}</h3>
-                    <p className="text-surface-500 text-sm">{p.description}</p>
+                    <p className="text-surface-500 text-sm line-clamp-1">{p.description}</p>
                   </div>
-                  <div className="h-20 flex items-end mb-8">
-                    <span className={`text-5xl font-black ${highlight ? 'text-rust-400' : 'text-white'}`}>
+                  <div className="h-16 flex items-center mb-8">
+                    <span className={`text-5xl font-black whitespace-nowrap ${highlight ? 'text-rust-400' : 'text-white'}`}>
                       {p.price.toFixed(2).replace('.', ',')} €
                     </span>
                     {p.duration !== 'lifetime' && (
-                      <span className="text-surface-400 text-sm ml-1.5 mb-1 whitespace-nowrap">
+                      <span className="text-surface-400 text-sm ml-2 whitespace-nowrap">
                         {p.duration === '1m' ? t('pricing.month', lang) : t('pricing.3month', lang)}
                       </span>
                     )}
