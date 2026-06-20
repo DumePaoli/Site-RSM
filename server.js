@@ -126,6 +126,10 @@ app.post('/api/admin/login', (req, res) => {
 })
 
 // ── Products
+app.get('/api/version', (req, res) => {
+  res.json({ version: process.env.APP_VERSION || 'v1.1.24' })
+})
+
 app.get('/api/products', async (req, res) => {
   try { res.json(await db.all('SELECT * FROM products WHERE active = 1')) }
   catch(e) { res.status(500).json({ detail: e.message }) }

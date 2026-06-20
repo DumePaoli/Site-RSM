@@ -274,9 +274,10 @@ export default function HomePage() {
   const [version, setVersion] = useState('v1.1.24')
 
   useEffect(() => {
-    fetch('https://api.github.com/repos/DumePaoli/RSM-Releases/releases/latest')
+    const base = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    fetch(`${base}/api/version`)
       .then(r => r.json())
-      .then(d => { if (d.tag_name) setVersion(d.tag_name) })
+      .then(d => { if (d.version) setVersion(d.version) })
       .catch(() => {})
   }, [])
 
