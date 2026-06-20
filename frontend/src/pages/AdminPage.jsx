@@ -3,11 +3,12 @@ import {
   adminLogin, adminStats, adminOrders, adminRefund,
   adminCustomers, adminBan, adminUnban,
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
-  adminBlacklist, adminAddBlacklist, adminRemoveBlacklist
+  adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
+  adminGenerateLicense
 } from '../api/client'
-import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn } from 'lucide-react'
+import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2 } from 'lucide-react'
 
-const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist']
+const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences']
 
 function StatusBadge({ status }) {
   const cls = { paid: 'badge-paid', pending: 'badge-pending', failed: 'badge-failed', refunded: 'badge-refunded' }
@@ -30,6 +31,11 @@ export default function AdminPage() {
   const [couponOk, setCouponOk]     = useState(false)
   const [blEmail, setBlEmail]       = useState('')
   const [blReason, setBlReason]     = useState('')
+  const [licNotes, setLicNotes]     = useState('')
+  const [licKeys, setLicKeys]       = useState([])
+  const [licLoading, setLicLoading] = useState(false)
+  const [licErr, setLicErr]         = useState('')
+  const [copied, setCopied]         = useState(null)
 
   useEffect(() => {
     if (!authed) return
@@ -88,6 +94,25 @@ export default function AdminPage() {
   const removeBl = async (id) => {
     await adminRemoveBlacklist(id)
     setBlacklist(blacklist.filter(b => b.id !== id))
+  }
+
+  const generateLic = async (e) => {
+    e.preventDefault()
+    setLicErr('')
+    setLicLoading(true)
+    try {
+      const r = await adminGenerateLicense(licNotes)
+      setLicKeys(prev => [{ key: r.key, notes: licNotes, at: new Date().toLocaleString('fr-FR') }, ...prev])
+      setLicNotes('')
+    } catch(err) {
+      setLicErr(err.response?.data?.detail || 'Erreur génération')
+    } finally { setLicLoading(false) }
+  }
+
+  const copyKey = (key) => {
+    navigator.clipboard.writeText(key)
+    setCopied(key)
+    setTimeout(() => setCopied(null), 2000)
   }
 
   if (!authed) return (
@@ -324,6 +349,38 @@ export default function AdminPage() {
               </div>
               <button type="submit" className="btn-danger w-full justify-center py-3">
                 <Ban size={14} /> Blacklister
+              </button>
+            </form>
+          </div>
+        )}
+        {/* Licences */}
+        {tab === 'Licences' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 card space-y-3">
+              <h3 className="font-semibold text-white flex items-center gap-2"><Key size={16} className="text-rust-500" /> Clés générées cette session</h3>
+              {licKeys.length === 0 && <p className="text-surface-400 text-sm py-4 text-center">Aucune clé générée</p>}
+              {licKeys.map((l, i) => (
+                <div key={i} className="flex items-center justify-between bg-surface-800 rounded-xl px-4 py-3 gap-3">
+                  <div className="min-w-0">
+                    <div className="font-mono text-rust-400 text-sm truncate">{l.key}</div>
+                    {l.notes && <div className="text-surface-400 text-xs mt-0.5">{l.notes}</div>}
+                    <div className="text-surface-500 text-xs">{l.at}</div>
+                  </div>
+                  <button onClick={() => copyKey(l.key)} className="btn-secondary text-xs py-1.5 px-3 flex-shrink-0 flex items-center gap-1">
+                    {copied === l.key ? <><CheckCircle2 size={12} className="text-green-400" /> Copié</> : <><Copy size={12} /> Copier</>}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <form onSubmit={generateLic} className="card space-y-4 h-fit">
+              <h3 className="font-semibold text-white flex items-center gap-2"><Key size={16} className="text-rust-500" /> Générer une licence</h3>
+              <div>
+                <label className="label">Notes (optionnel)</label>
+                <input className="input" placeholder="cadeau, test, influenceur…" value={licNotes} onChange={e => setLicNotes(e.target.value)} />
+              </div>
+              {licErr && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">{licErr}</p>}
+              <button type="submit" disabled={licLoading} className="btn-primary w-full justify-center disabled:opacity-50">
+                <Key size={14} /> {licLoading ? 'Génération…' : 'Générer'}
               </button>
             </form>
           </div>
