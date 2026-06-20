@@ -12,8 +12,8 @@ const translations = {
 
     // Hero
     'hero.badge':     'Windows 10/11 · Carbon & Oxide · {version}',
-    'hero.title1':    'Your Server,',
-    'hero.title2':    'Your Rules.',
+    'hero.title1':    'Votre serveur,',
+    'hero.title2':    'Vos règles.',
     'hero.sub':       'Interface Windows tout-en-un pour admins sérieux. Démarrage, RCON, sauvegardes, wipes planifiés, Discord bot — sans ligne de commande.',
     'hero.cta.buy':   'Acheter maintenant',
     'hero.cta.feat':  'Voir les fonctionnalités',
@@ -26,7 +26,7 @@ const translations = {
 
     // Features section
     'feat.label':     'Fonctionnalités',
-    'feat.title':     'Power meets simplicity.',
+    'feat.title':     'Puissance et simplicité.',
     'feat.sub':       'Tout ce qu\'un admin fait manuellement, RSM Pro le fait automatiquement.',
 
     'feat.dashboard.title': 'Dashboard',
@@ -98,8 +98,8 @@ const translations = {
     'faq.a7': 'Oui, support Discord inclus dans tous les plans. Réponse généralement sous 24h.',
 
     // CTA
-    'cta.title1':     'Votre serveur',
-    'cta.title2':     'mérite mieux.',
+    'cta.title1':     'Prêt à reprendre',
+    'cta.title2':     'le contrôle ?',
     'cta.sub':        'Rejoignez des centaines d\'admins qui ont arrêté de gérer leur serveur à la main.',
     'cta.buy':        'Obtenir RSM Pro',
     'cta.download':   'Télécharger',
