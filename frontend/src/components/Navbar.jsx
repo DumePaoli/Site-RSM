@@ -16,7 +16,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-rust-500 rounded-lg flex items-center justify-center text-white font-black text-sm">R</div>
+            <img src="/logo.png" alt="RSM Pro" className="w-8 h-8 rounded-lg object-cover" />
             <span className="font-bold text-white text-sm hidden sm:block">RSM <span className="text-rust-500">Pro</span></span>
           </Link>
 
