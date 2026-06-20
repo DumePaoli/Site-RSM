@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-surface-900 text-gray-100;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { @apply bg-rust-500/30 text-white; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-surface-800; }
+  ::-webkit-scrollbar-thumb { @apply bg-surface-500 rounded-full; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-6 py-3 bg-rust-500 hover:bg-rust-600
+           text-white font-semibold rounded-lg transition-all duration-200
+           shadow-lg shadow-rust-500/20 hover:shadow-rust-500/40 hover:scale-[1.02]
+           active:scale-[0.98] cursor-pointer;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-6 py-3 bg-surface-700 hover:bg-surface-600
+           text-gray-200 font-semibold rounded-lg transition-all duration-200 cursor-pointer;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20
+           text-red-400 font-medium rounded-lg transition-all duration-200 text-sm cursor-pointer;
+  }
+  .card {
+    @apply bg-surface-800 border border-surface-700 rounded-xl p-6;
+  }
+  .input {
+    @apply w-full bg-surface-750 border border-surface-600 rounded-lg px-4 py-3
+           text-gray-100 placeholder-surface-400 focus:outline-none
+           focus:border-rust-500 focus:ring-1 focus:ring-rust-500/30 transition-colors;
+  }
+  .label {
+    @apply block text-sm font-medium text-surface-400 mb-2;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-paid   { @apply badge bg-green-500/15 text-green-400; }
+  .badge-pending { @apply badge bg-yellow-500/15 text-yellow-400; }
+  .badge-failed  { @apply badge bg-red-500/15 text-red-400; }
+  .badge-refunded { @apply badge bg-gray-500/15 text-gray-400; }
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-white;
+  }
+  .section-sub {
+    @apply text-surface-400 text-lg mt-3 max-w-2xl;
+  }
+  .glow-rust {
+    text-shadow: 0 0 40px rgba(249, 115, 22, 0.4);
+  }
+  .border-rust-glow {
+    box-shadow: 0 0 0 1px rgba(249,115,22,0.4), 0 0 20px rgba(249,115,22,0.1);
+  }
+}
