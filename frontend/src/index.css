@@ -6,26 +6,28 @@
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    @apply bg-surface-900 text-gray-100;
+    @apply bg-surface-950 text-gray-100;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   ::selection { @apply bg-rust-500/30 text-white; }
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { @apply bg-surface-800; }
-  ::-webkit-scrollbar-thumb { @apply bg-surface-500 rounded-full; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { @apply bg-surface-950; }
+  ::-webkit-scrollbar-thumb { @apply bg-surface-600 rounded-full; }
 }
 
 @layer components {
   .btn-primary {
     @apply inline-flex items-center gap-2 px-6 py-3 bg-rust-500 hover:bg-rust-600
-           text-white font-semibold rounded-lg transition-all duration-200
-           shadow-lg shadow-rust-500/20 hover:shadow-rust-500/40 hover:scale-[1.02]
+           text-white font-semibold rounded-none transition-all duration-150
+           shadow-lg shadow-rust-500/20 hover:shadow-rust-500/40
            active:scale-[0.98] cursor-pointer;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
   }
   .btn-secondary {
-    @apply inline-flex items-center gap-2 px-6 py-3 bg-surface-700 hover:bg-surface-600
-           text-gray-200 font-semibold rounded-lg transition-all duration-200 cursor-pointer;
+    @apply inline-flex items-center gap-2 px-6 py-3 bg-transparent border border-surface-600
+           hover:border-surface-400 text-gray-300 hover:text-white font-semibold
+           transition-all duration-150 cursor-pointer;
   }
   .btn-danger {
     @apply inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20
@@ -35,30 +37,54 @@
     @apply bg-surface-800 border border-surface-700 rounded-xl p-6;
   }
   .input {
-    @apply w-full bg-surface-750 border border-surface-600 rounded-lg px-4 py-3
-           text-gray-100 placeholder-surface-400 focus:outline-none
-           focus:border-rust-500 focus:ring-1 focus:ring-rust-500/30 transition-colors;
+    @apply w-full bg-surface-900 border border-surface-700 rounded-none px-4 py-3
+           text-gray-100 placeholder-surface-500 focus:outline-none
+           focus:border-rust-500 transition-colors;
   }
   .label {
-    @apply block text-sm font-medium text-surface-400 mb-2;
+    @apply block text-xs font-mono font-medium text-surface-500 mb-2 uppercase tracking-widest;
   }
   .badge {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
   }
-  .badge-paid   { @apply badge bg-green-500/15 text-green-400; }
+  .badge-paid    { @apply badge bg-green-500/15 text-green-400; }
   .badge-pending { @apply badge bg-yellow-500/15 text-yellow-400; }
   .badge-failed  { @apply badge bg-red-500/15 text-red-400; }
   .badge-refunded { @apply badge bg-gray-500/15 text-gray-400; }
-  .section-title {
-    @apply text-3xl md:text-4xl font-bold text-white;
-  }
-  .section-sub {
-    @apply text-surface-400 text-lg mt-3 max-w-2xl;
-  }
-  .glow-rust {
-    text-shadow: 0 0 40px rgba(249, 115, 22, 0.4);
-  }
-  .border-rust-glow {
-    box-shadow: 0 0 0 1px rgba(249,115,22,0.4), 0 0 20px rgba(249,115,22,0.1);
-  }
 }
+
+/* Scanline overlay */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+}
+
+/* Noise texture */
+.noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Terminal cursor blink */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.cursor-blink { animation: blink 1s step-end infinite; }
+
+/* Ticker */
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ticker-inner { animation: ticker 30s linear infinite; }
+.ticker-inner:hover { animation-play-state: paused; }
+
+/* Fade up */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.5s ease forwards; }

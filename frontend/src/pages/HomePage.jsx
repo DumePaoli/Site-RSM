@@ -1,109 +1,153 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
-  Zap, Shield, RotateCcw, DiscIcon, Archive, Calendar,
-  Monitor, Plug, Users, Terminal, ChevronDown, Star,
-  CheckCircle2, ArrowRight, Download
+  Zap, Shield, RotateCcw, Archive, Calendar,
+  Monitor, Plug, Users, Terminal, ChevronDown,
+  ArrowRight, Download, Cpu, HardDrive, Activity, Wifi
 } from 'lucide-react'
 import { getProducts } from '../api/client'
 
+/* ── Data ──────────────────────────────────────────────────────────────── */
+
 const FEATURES = [
-  { icon: <Zap size={22} />,        title: 'Démarrage 1 clic',      desc: 'Lancez, arrêtez ou redémarrez votre serveur instantanément depuis l\'interface.' },
-  { icon: <Terminal size={22} />,    title: 'Console RCON',           desc: 'Console RCON intégrée avec historique de commandes et auto-complétion.' },
-  { icon: <Users size={22} />,       title: 'Gestion joueurs',        desc: 'Kick, ban, message privé, historique de présence — tout en quelques clics.' },
-  { icon: <DiscIcon size={22} />,    title: 'Discord Bot',            desc: 'Notifications, alertes crash, relay chat Rust→Discord, rapports journaliers.' },
-  { icon: <Archive size={22} />,     title: 'Sauvegardes auto',       desc: 'ZIP planifiés de votre carte et données, rotation automatique.' },
-  { icon: <Calendar size={22} />,    title: 'Wipe planifié',          desc: 'Programmez vos wipes avec avertissements in-game à intervalles configurables.' },
-  { icon: <Monitor size={22} />,     title: 'Monitoring temps réel',  desc: 'Graphiques CPU, RAM, joueurs — historique 1 heure en anneau circulaire.' },
-  { icon: <Plug size={22} />,        title: 'Plugins Carbon',         desc: 'Installez, mettez à jour et gérez vos plugins Carbon depuis l\'UI.' },
-  { icon: <RotateCcw size={22} />,   title: 'Auto-redémarrage',       desc: 'Détection de crash avec redémarrage automatique pour un uptime maximal.' },
-  { icon: <Shield size={22} />,      title: 'Whitelist & Bans',       desc: 'Gérez vos listes blanches et bans directement depuis l\'interface.' },
-  { icon: <Users size={22} />,       title: 'Multi-serveurs',         desc: 'Gérez plusieurs serveurs Rust depuis une seule application.' },
-  { icon: <Zap size={22} />,         title: 'Mises à jour auto',      desc: 'RSM Pro se met à jour en arrière-plan — aucune action requise.' },
+  { icon: Zap,        title: 'Démarrage 1 clic',     desc: 'Lancez, stoppez, redémarrez — sans terminal.' },
+  { icon: Terminal,   title: 'Console RCON',          desc: 'Historique, auto-complétion, alias de commandes.' },
+  { icon: Users,      title: 'Joueurs',               desc: 'Kick, ban, PM, historique de présence.' },
+  { icon: Monitor,    title: 'Monitoring',            desc: 'CPU / RAM / joueurs — 1h de graphique en anneau.' },
+  { icon: Archive,    title: 'Sauvegardes auto',      desc: 'ZIP planifiés, rotation automatique.' },
+  { icon: Calendar,   title: 'Wipe planifié',         desc: 'Warnings in-game, recurrence configurable.' },
+  { icon: Plug,       title: 'Plugins Carbon',        desc: 'Install, update, remove depuis l\'UI.' },
+  { icon: RotateCcw,  title: 'Auto-redémarrage',      desc: 'Crash détecté → serveur relancé en secondes.' },
+  { icon: Shield,     title: 'Whitelist & Bans',      desc: 'Gestion directe depuis l\'interface.' },
+  { icon: Users,      title: 'Multi-serveurs',        desc: 'Plusieurs serveurs, une seule fenêtre.' },
+  { icon: Zap,        title: 'Mises à jour auto',     desc: 'RSM Pro se met à jour en arrière-plan.' },
+  { icon: Monitor,    title: 'Discord Bot',           desc: 'Notifs crash, relay chat, rapports journaliers.' },
 ]
 
 const REVIEWS = [
-  { author: 'NightWolf_FR',  rating: 5, text: 'Meilleur outil que j\'aie utilisé pour mon serveur Rust. Le Discord bot seul vaut l\'achat. Setup en 10 minutes.' },
-  { author: 'Kryztalix',     rating: 5, text: 'Enfin une interface graphique propre pour Rust. Plus besoin de taper des commandes à la main. Je recommande 100%.' },
-  { author: 'AdminPvP2024',  rating: 5, text: 'La gestion des wipes planifiés est parfaite. Mes joueurs ont des avertissements in-game et tout se fait automatiquement.' },
-  { author: 'SteelBackpack', rating: 5, text: 'Support très réactif sur Discord. Problème résolu en 20 min. Logiciel stable depuis 3 mois sans crash.' },
-  { author: 'RustFR_Admin',  rating: 5, text: 'J\'ai essayé d\'autres outils, RSM Pro est de loin le plus complet. Les sauvegardes auto m\'ont sauvé 2 fois déjà.' },
-  { author: 'Toxicus_PVP',   rating: 4, text: 'Interface claire, plugins Carbon gérés facilement. Petite courbe d\'apprentissage mais les docs sont bien faites.' },
+  { author: 'NightWolf_FR',  stars: 5, text: 'Meilleur outil pour mon serveur Rust. Le Discord bot seul vaut l\'achat. Setup en 10 minutes.' },
+  { author: 'Kryztalix',     stars: 5, text: 'Enfin une interface graphique propre. Plus besoin de taper des commandes à la main.' },
+  { author: 'AdminPvP2024',  stars: 5, text: 'Les wipes planifiés sont parfaits. Warnings in-game auto, tout se fait sans moi.' },
+  { author: 'SteelBackpack', stars: 5, text: 'Support très réactif sur Discord. Problème résolu en 20 min. Stable depuis 3 mois.' },
+  { author: 'RustFR_Admin',  stars: 5, text: 'J\'ai essayé d\'autres outils. RSM Pro est de loin le plus complet. Sauvegarde m\'a sauvé 2x.' },
+  { author: 'Toxicus_PVP',   stars: 4, text: 'Interface claire, plugins Carbon faciles. Petite courbe d\'apprentissage mais les docs sont bien.' },
 ]
 
 const FAQS = [
-  { q: 'Sur quel OS fonctionne RSM Pro ?',      a: 'Windows 10 et 11 64-bit uniquement. L\'application est un exécutable autonome — aucune installation Python ou autre runtime requise.' },
-  { q: 'Combien de serveurs puis-je gérer ?',    a: 'Autant que vous voulez. RSM Pro supporte la gestion multi-serveurs depuis une seule interface.' },
-  { q: 'Carbon ou Oxide — lequel est supporté ?', a: 'Les deux. RSM Pro détecte automatiquement votre framework de plugins et adapte les chemins en conséquence.' },
-  { q: 'Ma licence est valable combien de temps ?', a: 'Les plans mensuels et 3 mois s\'expirent à la date indiquée. Le plan À Vie vous donne accès pour toujours, mises à jour incluses.' },
-  { q: 'Comment activer ma licence ?',           a: 'Après achat, vous recevez un email avec votre clé RSM-XXXX-XXXX-XXXX. Entrez-la dans l\'onglet Licence de l\'application.' },
-  { q: 'Puis-je transférer ma licence ?',        a: 'Oui. Depuis l\'application, désactivez la licence sur votre machine actuelle, puis activez-la sur la nouvelle.' },
-  { q: 'Support inclus ?',                       a: 'Oui, support Discord inclus dans tous les plans. Réponse généralement sous 24h.' },
+  { q: 'Sur quel OS fonctionne RSM Pro ?',         a: 'Windows 10 et 11 64-bit. Exécutable autonome — aucune installation Python ou runtime.' },
+  { q: 'Combien de serveurs puis-je gérer ?',       a: 'Autant que vous voulez. Multi-serveurs natif depuis une seule fenêtre.' },
+  { q: 'Carbon ou Oxide — lequel est supporté ?',   a: 'Les deux. RSM Pro détecte automatiquement votre framework et adapte les chemins.' },
+  { q: 'Ma licence est valable combien de temps ?', a: 'Plans 1m/3m : expiration à date. À Vie : accès permanent, toutes mises à jour incluses.' },
+  { q: 'Comment activer ma licence ?',              a: 'Email avec clé RSM-XXXX-XXXX-XXXX après achat. Entrez-la dans l\'onglet Licence de l\'app.' },
+  { q: 'Puis-je transférer ma licence ?',           a: 'Oui. Désactivez dans l\'app sur l\'ancienne machine, activez sur la nouvelle.' },
 ]
 
-function PricingCard({ product, highlight }) {
+const TICKER_ITEMS = [
+  'Démarrage 1 clic', 'Console RCON', 'Discord Bot', 'Wipe Manager',
+  'Auto-backup', 'Crash Guard', 'Plugin Manager', 'Multi-serveurs',
+  'Whitelist', 'Monitoring temps réel', 'Mises à jour auto', 'Support Discord',
+]
+
+/* ── Terminal log animation ─────────────────────────────────────────────── */
+
+const LOG_LINES = [
+  { t: 0,    color: 'text-surface-500', msg: '> RSM Pro v1.1.24 starting...' },
+  { t: 400,  color: 'text-green-400',   msg: '[OK] Server process detected (PID 4821)' },
+  { t: 900,  color: 'text-surface-400', msg: '[18:42:03] PlayerA joined the server' },
+  { t: 1500, color: 'text-surface-400', msg: '[18:42:11] Auto-save completed (4.2s)' },
+  { t: 2100, color: 'text-rust-400',    msg: '[18:43:00] ⚠ Wipe in 60 minutes' },
+  { t: 2800, color: 'text-blue-400',    msg: '[18:43:05] Backup → save_20250620.zip' },
+  { t: 3500, color: 'text-green-400',   msg: '[18:44:01] PlayerB joined the server' },
+  { t: 4200, color: 'text-surface-400', msg: '[18:45:00] Discord notification sent' },
+  { t: 5000, color: 'text-rust-400',    msg: '[18:58:00] ⚠ Wipe in 5 minutes' },
+  { t: 5700, color: 'text-yellow-400',  msg: '[19:00:00] Wipe started — map cleared' },
+  { t: 6300, color: 'text-green-400',   msg: '[19:00:04] Server restarted successfully' },
+]
+
+function TerminalDemo() {
+  const [visibleLines, setVisibleLines] = useState([])
+
+  useEffect(() => {
+    const timers = LOG_LINES.map((line) =>
+      setTimeout(() => {
+        setVisibleLines((prev) => {
+          const next = [...prev, line]
+          return next.slice(-8)
+        })
+      }, line.t)
+    )
+    const restart = setTimeout(() => setVisibleLines([]), 7000)
+    return () => { timers.forEach(clearTimeout); clearTimeout(restart) }
+  }, [visibleLines.length === 0 ? 0 : -1])
+
+  useEffect(() => {
+    const interval = setInterval(() => setVisibleLines([]), 7500)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
-    <div className={`relative flex flex-col rounded-2xl p-8 transition-all duration-300 hover:scale-[1.02] ${
-      highlight
-        ? 'bg-rust-500/10 border-2 border-rust-500 shadow-2xl shadow-rust-500/20'
-        : 'bg-surface-800 border border-surface-700 hover:border-surface-600'
-    }`}>
-      {highlight && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-          <span className="bg-rust-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
-            Plus populaire
-          </span>
+    <div className="relative bg-surface-950 border border-surface-800 rounded-none overflow-hidden scanlines">
+      {/* Window chrome */}
+      <div className="flex items-center gap-2 px-4 py-2 bg-surface-900 border-b border-surface-800">
+        <div className="flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
         </div>
-      )}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-white">{product.name}</h3>
-        <p className="text-surface-400 text-sm mt-1">{product.description}</p>
+        <span className="ml-2 text-xs font-mono text-surface-500">RSM Pro — Console</span>
+        <div className="ml-auto flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-xs font-mono text-green-500">LIVE</span>
+        </div>
       </div>
-      <div className="mb-8">
-        <span className={`text-5xl font-black ${highlight ? 'text-rust-400' : 'text-white'}`}>
-          {product.price.toFixed(2).replace('.', ',')} €
-        </span>
-        {product.duration !== 'lifetime' && (
-          <span className="text-surface-400 text-sm ml-2">/ {product.duration === '1m' ? 'mois' : '3 mois'}</span>
-        )}
-      </div>
-      <ul className="space-y-3 mb-8 flex-1">
-        {['Toutes les fonctionnalités', 'Mises à jour incluses', 'Support Discord', 'Multi-serveurs', 'Livraison instantanée'].map(f => (
-          <li key={f} className="flex items-center gap-3 text-sm text-gray-300">
-            <CheckCircle2 size={16} className="text-rust-500 flex-shrink-0" />
-            {f}
-          </li>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-4 border-b border-surface-800">
+        {[
+          { icon: Activity,  label: 'STATUS', value: 'ONLINE',  color: 'text-green-400' },
+          { icon: Users,     label: 'PLAYERS', value: '18/50',  color: 'text-rust-400' },
+          { icon: Cpu,       label: 'CPU',     value: '34%',    color: 'text-blue-400' },
+          { icon: HardDrive, label: 'RAM',     value: '6.2 GB', color: 'text-purple-400' },
+        ].map(({ icon: Icon, label, value, color }) => (
+          <div key={label} className="flex flex-col items-center py-3 border-r border-surface-800 last:border-r-0">
+            <Icon size={12} className={`${color} mb-1`} />
+            <span className={`font-mono text-sm font-bold ${color}`}>{value}</span>
+            <span className="font-mono text-xs text-surface-600 uppercase tracking-widest">{label}</span>
+          </div>
         ))}
-        {product.duration === 'lifetime' && (
-          <li className="flex items-center gap-3 text-sm text-rust-400 font-semibold">
-            <CheckCircle2 size={16} className="text-rust-500 flex-shrink-0" />
-            Accès à vie garanti
-          </li>
-        )}
-      </ul>
-      <Link
-        to={`/checkout?plan=${product.slug}`}
-        className={highlight ? 'btn-primary justify-center text-center' : 'btn-secondary justify-center text-center'}
-      >
-        Acheter maintenant <ArrowRight size={16} />
-      </Link>
+      </div>
+
+      {/* Log output */}
+      <div className="p-4 h-44 overflow-hidden font-mono text-xs space-y-1.5">
+        {visibleLines.map((line, i) => (
+          <div key={i} className={`${line.color} fade-up`}>{line.msg}</div>
+        ))}
+        <span className="text-rust-500 cursor-blink">█</span>
+      </div>
     </div>
   )
 }
 
-function FAQItem({ q, a }) {
+/* ── FAQ item ───────────────────────────────────────────────────────────── */
+
+function FAQItem({ q, a, index }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border border-surface-700 rounded-xl overflow-hidden">
+    <div className="border-b border-surface-800">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-5 text-left hover:bg-surface-800 transition-colors"
+        className="w-full flex items-start justify-between py-5 text-left group"
       >
-        <span className="font-medium text-white text-sm">{q}</span>
-        <ChevronDown size={16} className={`text-surface-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <div className="flex items-start gap-4">
+          <span className="font-mono text-xs text-rust-500 mt-0.5 w-5 flex-shrink-0">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <span className="font-medium text-white text-sm group-hover:text-rust-400 transition-colors">{q}</span>
+        </div>
+        <ChevronDown size={14} className={`text-surface-500 flex-shrink-0 mt-0.5 ml-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="px-5 pb-5 text-surface-400 text-sm leading-relaxed border-t border-surface-700 pt-4">
+        <div className="pb-5 pl-9 pr-6 text-surface-400 text-sm leading-relaxed">
           {a}
         </div>
       )}
@@ -111,222 +155,291 @@ function FAQItem({ q, a }) {
   )
 }
 
+/* ── Main ───────────────────────────────────────────────────────────────── */
+
 export default function HomePage() {
   const [products, setProducts] = useState([])
 
   useEffect(() => {
     getProducts().then(setProducts).catch(() => {
       setProducts([
-        { id: 1, name: 'RSM Pro — 1 Mois',  slug: '1m',       price: 9.99,  duration: '1m',       description: 'Accès complet 1 mois' },
-        { id: 2, name: 'RSM Pro — 3 Mois',  slug: '3m',       price: 19.99, duration: '3m',       description: 'Accès complet 3 mois — Meilleure offre' },
-        { id: 3, name: 'RSM Pro — À Vie',   slug: 'lifetime', price: 29.99, duration: 'lifetime', description: 'Accès à vie + toutes mises à jour futures' },
+        { id: 1, name: '1 Mois',  slug: '1m',       price: 9.99,  duration: '1m',       description: 'Accès complet 1 mois' },
+        { id: 2, name: '3 Mois',  slug: '3m',       price: 19.99, duration: '3m',       description: 'Meilleure offre' },
+        { id: 3, name: 'À Vie',   slug: 'lifetime', price: 29.99, duration: 'lifetime', description: 'Accès à vie + mises à jour' },
       ])
     })
   }, [])
 
   return (
     <>
-      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-surface-900 pt-20 pb-32">
-        {/* Background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-rust-500/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-rust-500/3 rounded-full blur-3xl" />
-          {/* Grid pattern */}
-          <div className="absolute inset-0 opacity-[0.03]"
-            style={{ backgroundImage: 'linear-gradient(#f97316 1px, transparent 1px), linear-gradient(90deg, #f97316 1px, transparent 1px)', backgroundSize: '60px 60px' }}
-          />
-        </div>
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      <section className="relative bg-surface-950 overflow-hidden">
+        {/* Background grid */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(249,115,22,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.04) 1px, transparent 1px)',
+            backgroundSize: '48px 48px'
+          }}
+        />
+        {/* Corner accent */}
+        <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-rust-500/30 via-rust-500/5 to-transparent" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-rust-500/10 border border-rust-500/30 rounded-full text-rust-400 text-sm font-medium mb-8">
-            <Zap size={14} /> Application Windows — Aucune installation requise
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-6 glow-rust">
-            Gérez votre serveur<br />
-            <span className="text-rust-500">Rust</span> sans prise de tête
-          </h1>
-          <p className="text-xl text-surface-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Interface graphique Windows tout-en-un — démarrage, RCON, sauvegardes, wipes planifiés, Discord bot et plugins Carbon en quelques clics.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/checkout" className="btn-primary text-base px-8 py-4">
-              Acheter maintenant <ArrowRight size={18} />
-            </Link>
-            <a href="#features" className="btn-secondary text-base px-8 py-4">
-              Voir les fonctionnalités
-            </a>
-          </div>
-
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
-            {[['500+', 'Serveurs gérés'], ['99.9%', 'Uptime garanti'], ['< 24h', 'Support']].map(([v, l]) => (
-              <div key={l}>
-                <div className="text-2xl font-black text-rust-500">{v}</div>
-                <div className="text-xs text-surface-400 mt-1">{l}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Dashboard mockup */}
-          <div className="mt-16 relative max-w-4xl mx-auto">
-            <div className="bg-surface-800 border border-surface-700 rounded-2xl overflow-hidden shadow-2xl">
-              {/* Fake window bar */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-surface-850 border-b border-surface-700">
-                <div className="w-3 h-3 rounded-full bg-red-500/70" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
-                <div className="w-3 h-3 rounded-full bg-green-500/70" />
-                <span className="ml-3 text-xs text-surface-400 font-mono">Rust Server Manager Pro</span>
-              </div>
-              {/* Fake dashboard content */}
-              <div className="p-6 grid grid-cols-4 gap-4">
-                {[
-                  { label: 'Serveur', value: '🟢 En ligne', accent: 'text-green-400' },
-                  { label: 'Joueurs', value: '18 / 50', accent: 'text-rust-400' },
-                  { label: 'CPU', value: '34%', accent: 'text-blue-400' },
-                  { label: 'RAM', value: '6.2 GB', accent: 'text-purple-400' },
-                ].map(s => (
-                  <div key={s.label} className="bg-surface-750 rounded-lg p-4">
-                    <div className="text-xs text-surface-400 mb-1">{s.label}</div>
-                    <div className={`font-bold text-sm ${s.accent}`}>{s.value}</div>
-                  </div>
-                ))}
-                <div className="col-span-4 bg-surface-750 rounded-lg p-4">
-                  <div className="text-xs text-surface-400 mb-3">Console RCON</div>
-                  <div className="font-mono text-xs space-y-1">
-                    <div className="text-green-400">[18:42:03] PlayerA joined the game</div>
-                    <div className="text-surface-400">[18:42:11] Server save completed</div>
-                    <div className="text-rust-400">[18:43:00] Warning: Wipe in 60 minutes</div>
-                    <div className="text-blue-400">[18:43:05] Backup created: save_20250620_1843.zip</div>
-                  </div>
-                </div>
-              </div>
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 pt-20 pb-24 grid lg:grid-cols-2 gap-16 items-center">
+          {/* Left */}
+          <div>
+            <div className="inline-flex items-center gap-2 text-xs font-mono text-rust-500 mb-6 border border-rust-500/30 px-3 py-1.5 bg-rust-500/5">
+              <span className="w-1.5 h-1.5 rounded-full bg-rust-500 animate-pulse" />
+              v1.1.24 · Windows 10/11 · Carbon &amp; Oxide
             </div>
-            {/* Glow */}
-            <div className="absolute -inset-1 bg-rust-500/10 rounded-2xl blur-xl -z-10" />
-          </div>
-        </div>
-      </section>
 
-      {/* ── Features ──────────────────────────────────────────────────────────── */}
-      <section id="features" className="py-24 bg-surface-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="section-title">Tout ce dont votre serveur a besoin</h2>
-            <p className="section-sub mx-auto">RSM Pro regroupe en une seule app tout ce que vous feriez normalement à la main ou avec plusieurs outils séparés.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="group bg-surface-800 border border-surface-700 hover:border-rust-500/50 rounded-xl p-5 transition-all duration-300 hover:bg-surface-750">
-                <div className="w-10 h-10 bg-rust-500/10 border border-rust-500/20 rounded-lg flex items-center justify-center text-rust-500 mb-4 group-hover:bg-rust-500/20 transition-colors">
-                  {f.icon}
+            <h1 className="text-5xl lg:text-6xl font-black text-white leading-[1.05] tracking-tight mb-6">
+              Votre serveur<br />
+              <span className="text-rust-500">Rust</span>,<br />
+              sous contrôle.
+            </h1>
+
+            <p className="text-surface-400 text-lg leading-relaxed mb-8 max-w-md">
+              Interface Windows tout-en-un pour admins sérieux. Démarrage, RCON, sauvegardes, wipes planifiés, Discord bot — sans ligne de commande.
+            </p>
+
+            {/* Stats inline */}
+            <div className="flex items-center gap-8 mb-10 text-sm">
+              {[['500+', 'serveurs actifs'], ['< 24h', 'support'], ['3 ans', 'd\'uptime']].map(([v, l]) => (
+                <div key={l}>
+                  <div className="font-mono font-black text-2xl text-white">{v}</div>
+                  <div className="text-surface-500 text-xs mt-0.5">{l}</div>
                 </div>
-                <h3 className="font-semibold text-white text-sm mb-2">{f.title}</h3>
-                <p className="text-surface-400 text-xs leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link to="/checkout" className="btn-primary text-sm px-7 py-3.5">
+                Obtenir RSM Pro <ArrowRight size={15} />
+              </Link>
+              <a href="#features" className="btn-secondary text-sm px-7 py-3.5">
+                Voir les fonctionnalités
+              </a>
+            </div>
+          </div>
+
+          {/* Right — terminal */}
+          <div className="relative">
+            <TerminalDemo />
+            {/* Corner decorations */}
+            <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-rust-500" />
+            <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-rust-500" />
           </div>
         </div>
       </section>
 
-      {/* ── Screenshots ───────────────────────────────────────────────────────── */}
-      <section className="py-24 bg-surface-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="section-title">Interface pensée pour les admins</h2>
-            <p className="section-sub mx-auto">Chaque écran est conçu pour vous faire gagner du temps et éviter les erreurs.</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[
-              { name: 'Dashboard',      desc: 'Vue d\'ensemble serveur' },
-              { name: 'Joueurs',        desc: 'Gestion des joueurs' },
-              { name: 'Console',        desc: 'RCON en temps réel' },
-              { name: 'Discord',        desc: 'Bot & notifications' },
-              { name: 'Wipe Manager',   desc: 'Planification wipes' },
-              { name: 'Plugins',        desc: 'Carbon plugin manager' },
-            ].map((s) => (
-              <div key={s.name} className="group relative bg-surface-800 border border-surface-700 rounded-xl overflow-hidden aspect-video hover:border-rust-500/50 transition-colors cursor-default">
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Monitor size={32} className="text-surface-600 group-hover:text-rust-500/50 transition-colors mb-2" />
-                  <span className="text-sm font-semibold text-surface-500 group-hover:text-white transition-colors">{s.name}</span>
-                  <span className="text-xs text-surface-600 group-hover:text-surface-400 transition-colors mt-1">{s.desc}</span>
+      {/* ── TICKER ───────────────────────────────────────────────────────── */}
+      <div className="border-y border-surface-800 bg-surface-900 overflow-hidden py-3 relative">
+        <div className="ticker-inner flex gap-12 whitespace-nowrap select-none" style={{ width: 'max-content' }}>
+          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+            <span key={i} className="inline-flex items-center gap-2 text-xs font-mono text-surface-500 uppercase tracking-widest">
+              <span className="text-rust-500">◆</span> {item}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── FEATURES ─────────────────────────────────────────────────────── */}
+      <section id="features" className="py-28 bg-surface-950">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid lg:grid-cols-[300px_1fr] gap-16 items-start">
+            {/* Left sticky label */}
+            <div className="lg:sticky lg:top-32">
+              <p className="font-mono text-xs text-rust-500 tracking-widest mb-3 uppercase">Fonctionnalités</p>
+              <h2 className="text-4xl font-black text-white leading-tight mb-6">
+                Tout ce dont un admin a besoin.
+              </h2>
+              <p className="text-surface-400 text-sm leading-relaxed mb-8">
+                RSM Pro remplace une douzaine d'outils séparés par une seule application native Windows.
+              </p>
+              <Link to="/checkout" className="btn-primary text-sm">
+                Commencer <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            {/* Right grid */}
+            <div className="grid sm:grid-cols-2 gap-px bg-surface-800">
+              {FEATURES.map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="bg-surface-950 p-6 group hover:bg-surface-900 transition-colors">
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 border border-surface-700 group-hover:border-rust-500/40 flex items-center justify-center flex-shrink-0 transition-colors">
+                      <Icon size={14} className="text-rust-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-white text-sm font-semibold mb-1">{title}</h3>
+                      <p className="text-surface-500 text-xs leading-relaxed">{desc}</p>
+                    </div>
+                  </div>
                 </div>
-                {/* Screenshot placeholder gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-surface-750 to-surface-850 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-surface-400 text-sm mt-6">
-            Captures d'écran disponibles sur notre <a href="https://discord.gg" className="text-rust-500 hover:underline">Discord</a>
-          </p>
-        </div>
-      </section>
-
-      {/* ── Pricing ───────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-24 bg-surface-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="section-title">Tarifs simples et transparents</h2>
-            <p className="section-sub mx-auto">Pas d'abonnement caché. Livraison instantanée par email. Commencez dès aujourd'hui.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {products.map((p, i) => (
-              <PricingCard key={p.id} product={p} highlight={i === 1} />
-            ))}
-          </div>
-          <div className="mt-10 flex flex-wrap justify-center gap-6 text-sm text-surface-400">
-            <span className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rust-500" /> Paiement sécurisé Stripe & PayPal</span>
-            <span className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rust-500" /> Livraison instantanée par email</span>
-            <span className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rust-500" /> Support Discord inclus</span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Reviews ───────────────────────────────────────────────────────────── */}
-      <section id="reviews" className="py-24 bg-surface-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="section-title">Ce que disent nos admins</h2>
-            <p className="section-sub mx-auto">Des centaines d'admins font confiance à RSM Pro pour leurs serveurs Rust.</p>
+      {/* ── PRICING ──────────────────────────────────────────────────────── */}
+      <section id="pricing" className="py-28 bg-surface-900">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="mb-16">
+            <p className="font-mono text-xs text-rust-500 tracking-widest mb-3 uppercase">Tarifs</p>
+            <h2 className="text-4xl font-black text-white">Choisissez votre plan.</h2>
+            <p className="text-surface-400 text-sm mt-3">Livraison instantanée. Paiement sécurisé. Licence sur votre compte.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          <div className="grid md:grid-cols-3 gap-px bg-surface-800 border border-surface-800">
+            {products.map((p, i) => {
+              const isHighlight = i === 2
+              const maxPc = ['1 PC', '2 PC', '4 PC'][i] || '—'
+              const label = ['1 Mois', '3 Mois', 'À Vie'][i] || p.name
+              const sublabel = ['Essai', 'Populaire', 'Meilleur rapport'][i] || ''
+              return (
+                <div key={p.id} className={`relative p-8 flex flex-col ${isHighlight ? 'bg-surface-950' : 'bg-surface-900'}`}>
+                  {isHighlight && (
+                    <div className="absolute top-0 left-0 right-0 h-px bg-rust-500" />
+                  )}
+                  <div className="flex items-start justify-between mb-8">
+                    <div>
+                      <p className="font-mono text-xs text-surface-500 uppercase tracking-widest mb-1">{sublabel}</p>
+                      <h3 className="text-xl font-black text-white">{label}</h3>
+                    </div>
+                    {isHighlight && (
+                      <span className="text-xs font-mono text-rust-500 border border-rust-500/40 px-2 py-1 bg-rust-500/10">
+                        RECOMMANDÉ
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mb-8">
+                    <span className="text-5xl font-black text-white">{p.price.toFixed(0)}</span>
+                    <span className="text-surface-400 text-lg">,{p.price.toFixed(2).split('.')[1]} €</span>
+                    {p.duration !== 'lifetime' && (
+                      <span className="block text-xs font-mono text-surface-500 mt-1">
+                        / {p.duration === '1m' ? 'mois' : '3 mois'}
+                      </span>
+                    )}
+                  </div>
+
+                  <ul className="space-y-2.5 mb-8 flex-1 text-sm">
+                    {[
+                      'Toutes les fonctionnalités',
+                      'Mises à jour incluses',
+                      'Support Discord',
+                      `${maxPc} maximum`,
+                      p.duration === 'lifetime' ? 'Accès à vie garanti' : null,
+                    ].filter(Boolean).map(f => (
+                      <li key={f} className="flex items-center gap-2.5 text-surface-400">
+                        <span className="text-rust-500 text-xs">◆</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link
+                    to={`/checkout?plan=${p.slug}`}
+                    className={isHighlight ? 'btn-primary justify-center text-center text-sm py-3' : 'btn-secondary justify-center text-center text-sm py-3'}
+                  >
+                    Acheter — {p.price.toFixed(2).replace('.', ',')} € <ArrowRight size={14} />
+                  </Link>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-6 text-xs font-mono text-surface-500">
+            {['Paiement Stripe sécurisé', 'Livraison instantanée par email', 'Licence HWID protégée', 'Support Discord inclus'].map(s => (
+              <span key={s} className="flex items-center gap-2"><span className="text-rust-500">✓</span> {s}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── REVIEWS ──────────────────────────────────────────────────────── */}
+      <section id="reviews" className="py-28 bg-surface-950">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="mb-16">
+            <p className="font-mono text-xs text-rust-500 tracking-widest mb-3 uppercase">Avis</p>
+            <h2 className="text-4xl font-black text-white">Ce que disent les admins.</h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-surface-800 border border-surface-800">
             {REVIEWS.map((r) => (
-              <div key={r.author} className="bg-surface-800 border border-surface-700 rounded-xl p-6">
+              <div key={r.author} className="bg-surface-950 p-6 hover:bg-surface-900 transition-colors">
                 <div className="flex items-center gap-1 mb-4">
-                  {Array.from({ length: r.rating }).map((_, i) => (
-                    <Star key={i} size={14} className="text-rust-500 fill-rust-500" />
+                  {Array.from({ length: r.stars }).map((_, i) => (
+                    <span key={i} className="text-rust-500 text-xs">★</span>
                   ))}
                 </div>
-                <p className="text-surface-300 text-sm leading-relaxed mb-4">"{r.text}"</p>
-                <div className="text-surface-400 text-xs font-mono">— {r.author}</div>
+                <p className="text-surface-300 text-sm leading-relaxed mb-6">"{r.text}"</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-surface-800 border border-surface-700 flex items-center justify-center text-xs font-mono text-rust-500">
+                    {r.author[0]}
+                  </div>
+                  <span className="font-mono text-xs text-surface-500">{r.author}</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── FAQ ───────────────────────────────────────────────────────────────── */}
-      <section id="faq" className="py-24 bg-surface-950">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="section-title">Questions fréquentes</h2>
-            <p className="section-sub mx-auto">Tout ce que vous devez savoir avant d'acheter.</p>
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <section id="faq" className="py-28 bg-surface-900">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid lg:grid-cols-[300px_1fr] gap-16">
+          <div className="lg:sticky lg:top-32">
+            <p className="font-mono text-xs text-rust-500 tracking-widest mb-3 uppercase">FAQ</p>
+            <h2 className="text-4xl font-black text-white leading-tight">Questions fréquentes.</h2>
+            <p className="text-surface-400 text-sm mt-4 leading-relaxed">
+              Besoin d'autre chose ? Rejoignez le Discord pour une réponse rapide.
+            </p>
           </div>
-          <div className="space-y-3">
-            {FAQS.map((f) => <FAQItem key={f.q} {...f} />)}
+          <div className="divide-y divide-surface-800 border-t border-surface-800">
+            {FAQS.map((f, i) => <FAQItem key={f.q} {...f} index={i} />)}
           </div>
         </div>
       </section>
 
-      {/* ── CTA ───────────────────────────────────────────────────────────────── */}
-      <section className="py-24 bg-surface-900">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="bg-gradient-to-b from-rust-500/10 to-transparent border border-rust-500/30 rounded-2xl p-12">
-            <h2 className="text-4xl font-black text-white mb-4">Prêt à gérer votre serveur ?</h2>
-            <p className="text-surface-400 mb-8">Rejoignez des centaines d'admins qui utilisent RSM Pro chaque jour.</p>
-            <Link to="/checkout" className="btn-primary text-base px-10 py-4">
-              Commencer maintenant <ArrowRight size={18} />
-            </Link>
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
+      <section className="py-28 bg-surface-950 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px)',
+            backgroundSize: '48px 48px'
+          }}
+        />
+        <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-rust-500/30 to-transparent" />
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <p className="font-mono text-xs text-rust-500 tracking-widest mb-4 uppercase">Téléchargement</p>
+            <h2 className="text-5xl font-black text-white leading-tight mb-6">
+              Votre serveur<br />mérite mieux.
+            </h2>
+            <p className="text-surface-400 text-sm leading-relaxed mb-8 max-w-sm">
+              Rejoignez des centaines d'admins qui ont arrêté de taper des commandes à la main.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link to="/checkout" className="btn-primary text-sm px-7 py-3.5">
+                Obtenir RSM Pro <ArrowRight size={15} />
+              </Link>
+              <a href="/download" className="btn-secondary text-sm px-7 py-3.5">
+                <Download size={14} /> Télécharger
+              </a>
+            </div>
+          </div>
+
+          {/* Mini terminal */}
+          <div className="relative font-mono text-xs bg-surface-900 border border-surface-800 p-6">
+            <div className="absolute -top-px left-8 right-8 h-px bg-rust-500" />
+            <div className="space-y-2 text-surface-400">
+              <div className="text-surface-600"># Installation</div>
+              <div><span className="text-rust-500">$</span> Download RustServerManager.exe</div>
+              <div><span className="text-rust-500">$</span> Run as Administrator</div>
+              <div><span className="text-rust-500">$</span> Enter license key</div>
+              <div className="pt-2 text-green-400">✓ Ready. Your server is under control.</div>
+            </div>
           </div>
         </div>
       </section>
