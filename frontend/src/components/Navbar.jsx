@@ -27,7 +27,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="RSM Pro" className="w-8 h-8 object-contain" />
-            <span className="font-black text-white text-sm tracking-tight">RSM <span className="text-rust-500">Pro</span></span>
+            <span className="font-black text-white text-sm tracking-tight">Rust Server Manager <span className="text-rust-500">Pro</span></span>
           </Link>
 
           {/* Desktop nav */}

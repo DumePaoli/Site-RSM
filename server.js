@@ -126,14 +126,14 @@ app.post('/api/admin/login', (req, res) => {
 })
 
 // ── Products
-let _versionCache = { value: process.env.APP_VERSION || 'v1.1.24', at: 0 }
+let _versionCache = { value: process.env.APP_VERSION || 'v1.1.30', at: 0 }
 app.get('/api/version', async (req, res) => {
   const TTL = 3600_000
   if (Date.now() - _versionCache.at < TTL) return res.json({ version: _versionCache.value })
   try {
     const headers = { 'User-Agent': 'RSM-Site' }
     if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
-    const r = await axios.get('https://api.github.com/repos/DumePaoli/RSM-Releases/releases/latest', { headers })
+    const r = await axios.get('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest', { headers })
     if (r.data.tag_name) _versionCache = { value: r.data.tag_name, at: Date.now() }
   } catch {}
   res.json({ version: _versionCache.value })
