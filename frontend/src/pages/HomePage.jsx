@@ -274,7 +274,7 @@ export default function HomePage() {
   const [version, setVersion] = useState('v1.1.24')
 
   useEffect(() => {
-    fetch('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest')
+    fetch('https://api.github.com/repos/DumePaoli/RSM-Releases/releases/latest')
       .then(r => r.json())
       .then(d => { if (d.tag_name) setVersion(d.tag_name) })
       .catch(() => {})
