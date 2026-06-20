@@ -460,9 +460,9 @@ export default function HomePage() {
                       {badge}
                     </div>
                   )}
-                  <div className="mb-6 min-h-[3.5rem]">
+                  <div className="mb-6">
                     <h3 className="text-white font-bold text-lg mb-1">{p.name}</h3>
-                    <p className="text-surface-500 text-sm">{p.description}</p>
+                    <p className="text-surface-500 text-sm h-10 overflow-hidden">{p.description}</p>
                   </div>
                   <div className="h-16 flex items-center mb-8">
                     <span className={`text-5xl font-black whitespace-nowrap ${highlight ? 'text-rust-400' : 'text-white'}`}>
