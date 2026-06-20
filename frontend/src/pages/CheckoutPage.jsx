@@ -144,25 +144,9 @@ export default function CheckoutPage() {
             {/* Payment method */}
             <div className="card">
               <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Méthode de paiement</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setPayment('stripe')}
-                  className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                    paymentMethod === 'stripe' ? 'border-rust-500 bg-rust-500/10' : 'border-surface-700 hover:border-surface-600'
-                  }`}
-                >
-                  <CreditCard size={18} className={paymentMethod === 'stripe' ? 'text-rust-500' : 'text-surface-400'} />
-                  <span className={`font-semibold text-sm ${paymentMethod === 'stripe' ? 'text-white' : 'text-surface-400'}`}>Carte</span>
-                </button>
-                <button
-                  onClick={() => setPayment('paypal')}
-                  className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                    paymentMethod === 'paypal' ? 'border-rust-500 bg-rust-500/10' : 'border-surface-700 hover:border-surface-600'
-                  }`}
-                >
-                  <Wallet size={18} className={paymentMethod === 'paypal' ? 'text-rust-500' : 'text-surface-400'} />
-                  <span className={`font-semibold text-sm ${paymentMethod === 'paypal' ? 'text-white' : 'text-surface-400'}`}>PayPal</span>
-                </button>
+              <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-rust-500 bg-rust-500/10">
+                <CreditCard size={18} className="text-rust-500" />
+                <span className="font-semibold text-sm text-white">Paiement par carte — Stripe</span>
               </div>
             </div>
           </div>
