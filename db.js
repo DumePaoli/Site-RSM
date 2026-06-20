@@ -77,6 +77,12 @@ async function init() {
       id     INT AUTO_INCREMENT PRIMARY KEY,
       email  VARCHAR(255) UNIQUE NOT NULL,
       reason TEXT DEFAULT ''
+    );
+    CREATE TABLE IF NOT EXISTS manual_licenses (
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      license_key VARCHAR(255) NOT NULL,
+      notes      VARCHAR(255) DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
 

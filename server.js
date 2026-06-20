@@ -327,8 +327,14 @@ app.post('/api/admin/generate-license', adminMiddleware, async (req, res) => {
   try {
     const { notes = '' } = req.body
     const key = await generateLicenseKey(notes || 'admin-manual')
+    await db.run('INSERT INTO manual_licenses (license_key, notes) VALUES (?,?)', [key, notes])
     res.json({ key })
   } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.get('/api/admin/manual-licenses', adminMiddleware, async (req, res) => {
+  try { res.json(await db.all('SELECT * FROM manual_licenses ORDER BY created_at DESC')) }
+  catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }))

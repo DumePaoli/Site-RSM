@@ -4,7 +4,7 @@ import {
   adminCustomers, adminBan, adminUnban,
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
-  adminGenerateLicense
+  adminGenerateLicense, adminManualLicenses
 } from '../api/client'
 import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2 } from 'lucide-react'
 
@@ -36,6 +36,7 @@ export default function AdminPage() {
   const [licLoading, setLicLoading] = useState(false)
   const [licErr, setLicErr]         = useState('')
   const [copied, setCopied]         = useState(null)
+  const [licDbLoading, setLicDbLoading] = useState(false)
 
   useEffect(() => {
     if (!authed) return
@@ -44,6 +45,7 @@ export default function AdminPage() {
     adminCustomers().then(setCustomers).catch(() => {})
     adminCoupons().then(setCoupons).catch(() => {})
     adminBlacklist().then(setBlacklist).catch(() => {})
+    adminManualLicenses().then(rows => setLicKeys(rows.map(r => ({ key: r.license_key, notes: r.notes, at: new Date(r.created_at).toLocaleString('fr-FR') })))).catch(() => {})
   }, [authed])
 
   const doLogin = async (e) => {

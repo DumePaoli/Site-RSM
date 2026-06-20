@@ -47,3 +47,4 @@ export const adminBlacklist = () => api.get('/api/admin/blacklist').then(r => r.
 export const adminAddBlacklist = (d) => api.post('/api/admin/blacklist', d).then(r => r.data)
 export const adminRemoveBlacklist = (id) => api.delete(`/api/admin/blacklist/${id}`).then(r => r.data)
 export const adminGenerateLicense = (notes) => api.post('/api/admin/generate-license', { notes }).then(r => r.data)
+export const adminManualLicenses = () => api.get('/api/admin/manual-licenses').then(r => r.data)
