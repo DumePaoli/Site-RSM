@@ -6,6 +6,8 @@ import {
   ArrowRight, Download, Check, Star, Activity, Cpu, HardDrive
 } from 'lucide-react'
 import { getProducts } from '../api/client'
+import { useLang } from '../contexts/LangContext'
+import { t } from '../i18n'
 
 /* ─────────────────────────────────── DATA ────────────────────────────────── */
 
@@ -266,6 +268,7 @@ function FAQItem({ q, a, index }) {
 /* ──────────────────────────────────── PAGE ───────────────────────────────── */
 
 export default function HomePage() {
+  const { lang } = useLang()
   const [products, setProducts] = useState([])
   const [activeFeature, setActiveFeature] = useState(0)
 
@@ -277,46 +280,68 @@ export default function HomePage() {
     ]))
   }, [])
 
-  // Auto-cycle features
   useEffect(() => {
-    const t = setInterval(() => setActiveFeature(i => (i + 1) % FEATURES.length), 4000)
-    return () => clearInterval(t)
+    const timer = setInterval(() => setActiveFeature(i => (i + 1) % FEATURES.length), 4000)
+    return () => clearInterval(timer)
   }, [])
+
+  const featureKeys = ['dashboard','console','players','wipe','backup','discord','plugins','monitoring','autostart']
+  const translatedFeatures = FEATURES.map((f, i) => ({
+    ...f,
+    title: t(`feat.${featureKeys[i]}.title`, lang),
+    desc:  t(`feat.${featureKeys[i]}.desc`,  lang),
+  }))
+
+  const faqItems = Array.from({ length: 7 }, (_, i) => ({
+    q: t(`faq.q${i+1}`, lang),
+    a: t(`faq.a${i+1}`, lang),
+  }))
+
+  const pcLimits = [t('pricing.f4.1m', lang), t('pricing.f4.3m', lang), t('pricing.f4.lt', lang)]
+  const guarantees = [
+    t('pricing.guarantee1', lang),
+    t('pricing.guarantee2', lang),
+    t('pricing.guarantee3', lang),
+    t('pricing.guarantee4', lang),
+  ]
 
   return (
     <>
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <section className="relative bg-[#0b0d0e] overflow-hidden pt-16 pb-24">
-        {/* Subtle radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-rust-500/[0.07] rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-6xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs text-surface-400 mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Windows 10/11 · Carbon &amp; Oxide · v1.1.24
+            {t('hero.badge', lang)}
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[1.05] mb-6">
-            Your Server,<br />
-            <span className="text-rust-500">Your Rules.</span>
+            {t('hero.title1', lang)}<br />
+            <span className="text-rust-500">{t('hero.title2', lang)}</span>
           </h1>
 
           <p className="text-lg text-surface-400 max-w-2xl mx-auto leading-relaxed mb-10">
-            Interface Windows tout-en-un pour admins sérieux. Démarrage, RCON, sauvegardes, wipes planifiés, Discord bot — sans ligne de commande.
+            {t('hero.sub', lang)}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
             <Link to="/checkout" className="btn-primary px-8 py-3.5 text-base">
-              Acheter maintenant <ArrowRight size={17} />
+              {t('hero.cta.buy', lang)} <ArrowRight size={17} />
             </Link>
             <a href="#features" className="btn-secondary px-8 py-3.5 text-base">
-              Voir les fonctionnalités
+              {t('hero.cta.feat', lang)}
             </a>
           </div>
 
           {/* Stats */}
           <div className="flex items-center justify-center gap-12 text-center mb-16">
-            {[['500+', 'Serveurs actifs'], ['3', 'Ans de développement'], ['< 24h', 'Support Discord']].map(([v, l]) => (
+            {[
+              [t('hero.stat1.v', lang), t('hero.stat1.l', lang)],
+              [t('hero.stat2.v', lang), t('hero.stat2.l', lang)],
+              [t('hero.stat3.v', lang), t('hero.stat3.l', lang)],
+            ].map(([v, l]) => (
               <div key={l}>
                 <div className="text-3xl font-black text-white">{v}</div>
                 <div className="text-xs text-surface-500 mt-1">{l}</div>
@@ -351,17 +376,14 @@ export default function HomePage() {
       <section id="features" className="py-24 bg-[#0e1012]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <p className="text-rust-500 text-sm font-semibold uppercase tracking-widest mb-3">Fonctionnalités</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Power meets simplicity.</h2>
-            <p className="text-surface-400 text-lg max-w-xl mx-auto">
-              Tout ce qu'un admin fait manuellement, RSM Pro le fait automatiquement.
-            </p>
+            <p className="text-rust-500 text-sm font-semibold uppercase tracking-widest mb-3">{t('feat.label', lang)}</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">{t('feat.title', lang)}</h2>
+            <p className="text-surface-400 text-lg max-w-xl mx-auto">{t('feat.sub', lang)}</p>
           </div>
 
           <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
-            {/* Left: feature list */}
             <div className="grid sm:grid-cols-2 gap-2">
-              {FEATURES.map((f, i) => (
+              {translatedFeatures.map((f, i) => (
                 <FeatureCard
                   key={f.slug}
                   feature={f}
@@ -371,15 +393,14 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* Right: live preview */}
             <div className="lg:sticky lg:top-28">
-              <AppWindow title={`RSM Pro — ${FEATURES[activeFeature].title}`}>
-                <div className={`bg-gradient-to-b ${FEATURES[activeFeature].color} rounded-lg p-3`}>
-                  {FEATURES[activeFeature].preview}
+              <AppWindow title={`RSM Pro — ${translatedFeatures[activeFeature].title}`}>
+                <div className={`bg-gradient-to-b ${translatedFeatures[activeFeature].color} rounded-lg p-3`}>
+                  {translatedFeatures[activeFeature].preview}
                 </div>
               </AppWindow>
               <p className="text-center text-xs text-surface-500 mt-3">
-                {FEATURES[activeFeature].desc}
+                {translatedFeatures[activeFeature].desc}
               </p>
             </div>
           </div>
@@ -390,7 +411,11 @@ export default function HomePage() {
       <div className="bg-rust-500/10 border-y border-rust-500/20 py-10">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-white text-xl font-bold">
-            Conçu pour les admins qui veulent <span className="text-rust-500">moins de travail manuel</span> et <span className="text-rust-500">plus d'uptime.</span>
+            {t('banner', lang).split('{less}')[0]}
+            <span className="text-rust-500">{t('banner.less', lang)}</span>
+            {t('banner', lang).split('{less}')[1]?.split('{more}')[0]}
+            <span className="text-rust-500">{t('banner.more', lang)}</span>
+            {t('banner', lang).split('{more}')[1]}
           </p>
         </div>
       </div>
@@ -399,16 +424,23 @@ export default function HomePage() {
       <section id="pricing" className="py-24 bg-[#0b0d0e]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <p className="text-rust-500 text-sm font-semibold uppercase tracking-widest mb-3">Tarifs</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Des tarifs qui s'adaptent.</h2>
-            <p className="text-surface-400 text-lg">Toutes les fonctionnalités dans chaque plan. Choisissez la durée.</p>
+            <p className="text-rust-500 text-sm font-semibold uppercase tracking-widest mb-3">{t('pricing.label', lang)}</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">{t('pricing.title', lang)}</h2>
+            <p className="text-surface-400 text-lg">{t('pricing.sub', lang)}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {products.map((p, i) => {
               const highlight = i === 2
-              const maxPc = ['1 PC', '2 PC', '4 PC'][i] || '—'
-              const badge = [null, null, 'Meilleure valeur'][i]
+              const badge = i === 2 ? t('pricing.badge', lang) : null
+              const features = [
+                t('pricing.f1', lang),
+                t('pricing.f2', lang),
+                t('pricing.f3', lang),
+                pcLimits[i] || '—',
+                t('pricing.f5', lang),
+                ...(p.duration === 'lifetime' ? [t('pricing.f6', lang)] : []),
+              ]
               return (
                 <div key={p.id} className={`relative rounded-2xl p-7 border flex flex-col transition-all duration-300 ${
                   highlight
@@ -430,19 +462,12 @@ export default function HomePage() {
                     </span>
                     {p.duration !== 'lifetime' && (
                       <span className="text-surface-400 text-sm ml-1">
-                        / {p.duration === '1m' ? 'mois' : '3 mois'}
+                        {p.duration === '1m' ? t('pricing.month', lang) : t('pricing.3month', lang)}
                       </span>
                     )}
                   </div>
                   <ul className="space-y-3 mb-8 flex-1">
-                    {[
-                      'Toutes les fonctionnalités',
-                      'Mises à jour incluses',
-                      'Support Discord',
-                      `Limite : ${maxPc}`,
-                      'Livraison instantanée',
-                      ...(p.duration === 'lifetime' ? ['Accès à vie garanti'] : []),
-                    ].map(f => (
+                    {features.map(f => (
                       <li key={f} className="flex items-center gap-2.5 text-sm text-surface-300">
                         <Check size={14} className="text-rust-500 flex-shrink-0" /> {f}
                       </li>
@@ -452,7 +477,7 @@ export default function HomePage() {
                     to={`/checkout?plan=${p.slug}`}
                     className={`justify-center text-center text-sm py-3 ${highlight ? 'btn-primary' : 'btn-secondary'}`}
                   >
-                    Acheter <ArrowRight size={14} />
+                    {t('pricing.buy', lang)} <ArrowRight size={14} />
                   </Link>
                 </div>
               )
@@ -460,7 +485,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-10 flex flex-wrap justify-center gap-6 text-sm text-surface-500">
-            {['Paiement Stripe sécurisé', 'Livraison instantanée', 'Licence HWID protégée', 'Support Discord'].map(s => (
+            {guarantees.map(s => (
               <span key={s} className="flex items-center gap-2"><Check size={12} className="text-rust-500" /> {s}</span>
             ))}
           </div>
@@ -471,8 +496,8 @@ export default function HomePage() {
       <section id="reviews" className="py-24 bg-[#0e1012]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <p className="text-rust-500 text-sm font-semibold uppercase tracking-widest mb-3">Avis</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Ce que disent les admins.</h2>
+            <p className="text-rust-500 text-sm font-semibold uppercase tracking-widest mb-3">{t('reviews.label', lang)}</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">{t('reviews.title', lang)}</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {REVIEWS.map((r) => (
@@ -499,11 +524,11 @@ export default function HomePage() {
       <section id="faq" className="py-24 bg-[#0b0d0e]">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
-            <p className="text-rust-500 text-sm font-semibold uppercase tracking-widest mb-3">FAQ</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Questions fréquentes.</h2>
+            <p className="text-rust-500 text-sm font-semibold uppercase tracking-widest mb-3">{t('faq.label', lang)}</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">{t('faq.title', lang)}</h2>
           </div>
           <div>
-            {FAQS.map((f, i) => <FAQItem key={f.q} {...f} index={i} />)}
+            {faqItems.map((f, i) => <FAQItem key={i} {...f} index={i} />)}
           </div>
         </div>
       </section>
@@ -514,17 +539,15 @@ export default function HomePage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-rust-500/10 rounded-full blur-[80px] pointer-events-none" />
         <div className="relative max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
-            Prêt à reprendre<br />le contrôle ?
+            {t('cta.title1', lang)}<br />{t('cta.title2', lang)}
           </h2>
-          <p className="text-surface-400 text-lg mb-10">
-            Rejoignez des centaines d'admins qui ont arrêté de gérer leur serveur à la main.
-          </p>
+          <p className="text-surface-400 text-lg mb-10">{t('cta.sub', lang)}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/checkout" className="btn-primary px-8 py-4 text-base">
-              Obtenir RSM Pro <ArrowRight size={17} />
+              {t('cta.buy', lang)} <ArrowRight size={17} />
             </Link>
             <a href="/download" className="btn-secondary px-8 py-4 text-base">
-              <Download size={16} /> Télécharger
+              <Download size={16} /> {t('cta.download', lang)}
             </a>
           </div>
         </div>

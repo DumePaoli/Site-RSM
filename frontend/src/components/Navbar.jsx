@@ -1,14 +1,24 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useLang } from '../contexts/LangContext'
+import { t } from '../i18n'
 import { LogOut, LayoutDashboard, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
+  const { lang, switchLang } = useLang()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
   const handleLogout = () => { logout(); navigate('/') }
+
+  const navLinks = [
+    ['#features', t('nav.features', lang)],
+    ['#pricing',  t('nav.pricing',  lang)],
+    ['#reviews',  t('nav.reviews',  lang)],
+    ['#faq',      t('nav.faq',      lang)],
+  ]
 
   return (
     <nav className="sticky top-0 z-50 bg-[#0b0d0e]/90 backdrop-blur-md border-b border-white/5">
@@ -22,27 +32,38 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-7 text-sm text-surface-400">
-            <a href="#features" className="hover:text-white transition-colors">Fonctionnalités</a>
-            <a href="#pricing"  className="hover:text-white transition-colors">Tarifs</a>
-            <a href="#reviews"  className="hover:text-white transition-colors">Avis</a>
-            <a href="#faq"      className="hover:text-white transition-colors">FAQ</a>
+            {navLinks.map(([h, l]) => (
+              <a key={h} href={h} className="hover:text-white transition-colors">{l}</a>
+            ))}
           </div>
 
-          {/* Auth */}
+          {/* Auth + lang */}
           <div className="hidden md:flex items-center gap-4">
+            {/* Lang toggle */}
+            <div className="flex items-center gap-1 text-xs border border-white/10 rounded-lg overflow-hidden">
+              <button
+                onClick={() => switchLang('fr')}
+                className={`px-2.5 py-1.5 transition-colors ${lang === 'fr' ? 'bg-rust-500 text-white' : 'text-surface-400 hover:text-white'}`}
+              >FR</button>
+              <button
+                onClick={() => switchLang('en')}
+                className={`px-2.5 py-1.5 transition-colors ${lang === 'en' ? 'bg-rust-500 text-white' : 'text-surface-400 hover:text-white'}`}
+              >EN</button>
+            </div>
+
             {user ? (
               <>
                 <Link to="/dashboard" className="flex items-center gap-1.5 text-sm text-surface-400 hover:text-white transition-colors">
-                  <LayoutDashboard size={14} /> Mon compte
+                  <LayoutDashboard size={14} /> {t('nav.account', lang)}
                 </Link>
                 <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm text-surface-500 hover:text-red-400 transition-colors">
-                  <LogOut size={14} /> Déconnexion
+                  <LogOut size={14} /> {t('nav.logout', lang)}
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="text-sm text-surface-400 hover:text-white transition-colors">Connexion</Link>
-                <Link to="/checkout" className="btn-primary text-sm py-2 px-5">Acheter</Link>
+                <Link to="/login" className="text-sm text-surface-400 hover:text-white transition-colors">{t('nav.login', lang)}</Link>
+                <Link to="/checkout" className="btn-primary text-sm py-2 px-5">{t('nav.buy', lang)}</Link>
               </>
             )}
           </div>
@@ -55,19 +76,25 @@ export default function Navbar() {
 
       {open && (
         <div className="md:hidden bg-[#0d0f11] border-b border-white/5 px-6 py-4 space-y-3">
-          {[['#features','Fonctionnalités'],['#pricing','Tarifs'],['#reviews','Avis'],['#faq','FAQ']].map(([h,l]) => (
-            <a key={l} href={h} onClick={() => setOpen(false)} className="block text-sm text-surface-400 hover:text-white py-1.5">{l}</a>
+          {navLinks.map(([h, l]) => (
+            <a key={h} href={h} onClick={() => setOpen(false)} className="block text-sm text-surface-400 hover:text-white py-1.5">{l}</a>
           ))}
           <div className="pt-3 border-t border-white/5 space-y-2">
+            {/* Mobile lang toggle */}
+            <div className="flex items-center gap-2 py-1.5">
+              <span className="text-xs text-surface-500">Langue :</span>
+              <button onClick={() => switchLang('fr')} className={`text-xs px-2 py-1 rounded ${lang === 'fr' ? 'bg-rust-500 text-white' : 'text-surface-400'}`}>FR</button>
+              <button onClick={() => switchLang('en')} className={`text-xs px-2 py-1 rounded ${lang === 'en' ? 'bg-rust-500 text-white' : 'text-surface-400'}`}>EN</button>
+            </div>
             {user ? (
               <>
-                <Link to="/dashboard" onClick={() => setOpen(false)} className="block text-sm text-white py-1.5">Mon compte</Link>
-                <button onClick={() => { handleLogout(); setOpen(false) }} className="block text-sm text-red-400 py-1.5">Déconnexion</button>
+                <Link to="/dashboard" onClick={() => setOpen(false)} className="block text-sm text-white py-1.5">{t('nav.account', lang)}</Link>
+                <button onClick={() => { handleLogout(); setOpen(false) }} className="block text-sm text-red-400 py-1.5">{t('nav.logout', lang)}</button>
               </>
             ) : (
               <>
-                <Link to="/login" onClick={() => setOpen(false)} className="block text-sm text-surface-400 py-1.5">Connexion</Link>
-                <Link to="/checkout" onClick={() => setOpen(false)} className="btn-primary w-full justify-center mt-2">Acheter</Link>
+                <Link to="/login" onClick={() => setOpen(false)} className="block text-sm text-surface-400 py-1.5">{t('nav.login', lang)}</Link>
+                <Link to="/checkout" onClick={() => setOpen(false)} className="btn-primary w-full justify-center mt-2">{t('nav.buy', lang)}</Link>
               </>
             )}
           </div>
