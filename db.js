@@ -1,11 +1,11 @@
-const Database = require('better-sqlite3')
+const { Database } = require('node-sqlite3-wasm')
 const path = require('path')
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'shop.db')
 const db = new Database(DB_PATH)
 
-db.pragma('journal_mode = WAL')
-db.pragma('foreign_keys = ON')
+db.exec("PRAGMA journal_mode = WAL")
+db.exec("PRAGMA foreign_keys = ON")
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS customers (
@@ -16,7 +16,6 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     banned     INTEGER DEFAULT 0
   );
-
   CREATE TABLE IF NOT EXISTS products (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
@@ -27,7 +26,6 @@ db.exec(`
     duration    TEXT DEFAULT 'lifetime',
     active      INTEGER DEFAULT 1
   );
-
   CREATE TABLE IF NOT EXISTS orders (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_id    INTEGER REFERENCES customers(id),
@@ -44,7 +42,6 @@ db.exec(`
     created_at     TEXT DEFAULT (datetime('now')),
     paid_at        TEXT
   );
-
   CREATE TABLE IF NOT EXISTS coupons (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     code         TEXT UNIQUE NOT NULL,
@@ -54,7 +51,6 @@ db.exec(`
     active       INTEGER DEFAULT 1,
     expires_at   TEXT
   );
-
   CREATE TABLE IF NOT EXISTS blacklist (
     id     INTEGER PRIMARY KEY AUTOINCREMENT,
     email  TEXT UNIQUE NOT NULL,
@@ -62,7 +58,6 @@ db.exec(`
   );
 `)
 
-// Seed products
 const count = db.prepare('SELECT COUNT(*) as c FROM products').get()
 if (count.c === 0) {
   db.prepare(`INSERT INTO products (name, slug, price, duration, description) VALUES (?,?,?,?,?)`).run('RSM Pro — 1 Mois',  '1m',       9.99,  '1m',       'Accès complet 1 mois')

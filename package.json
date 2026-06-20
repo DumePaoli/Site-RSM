@@ -8,7 +8,6 @@
     "dev": "concurrently \"node server.js\" \"cd frontend && npm run dev\""
   },
   "dependencies": {
-    "better-sqlite3": "^11.3.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -16,7 +15,8 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.16",
     "stripe": "^17.3.1",
-    "axios": "^1.7.9"
+    "axios": "^1.7.9",
+    "node-sqlite3-wasm": "^0.8.17"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
