@@ -416,19 +416,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── BUILT FOR ADMINS banner ───────────────────────────────────────── */}
-      <div className="bg-rust-500/10 border-y border-rust-500/20 py-10">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-white text-xl font-bold">
-            {t('banner', lang).split('{less}')[0]}
-            <span className="text-rust-500">{t('banner.less', lang)}</span>
-            {t('banner', lang).split('{less}')[1]?.split('{more}')[0]}
-            <span className="text-rust-500">{t('banner.more', lang)}</span>
-            {t('banner', lang).split('{more}')[1]}
-          </p>
-        </div>
-      </div>
-
       {/* ── PRICING ──────────────────────────────────────────────────────── */}
       <section id="pricing" className="py-24 bg-[#0b0d0e]">
         <div className="max-w-6xl mx-auto px-6">
