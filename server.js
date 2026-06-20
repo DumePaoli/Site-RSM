@@ -322,6 +322,11 @@ app.delete('/api/admin/blacklist/:id', adminMiddleware, async (req, res) => {
 })
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
+app.get("/download", (req, res) => {
+  const url = process.env.DOWNLOAD_URL || "https://github.com/DumePaoli/Rust-Server-Manger2/releases/latest/download/RustServerManager.exe"
+  res.redirect(302, url)
+})
+
 
 app.use(express.static(path.join(__dirname, 'frontend', 'dist')))
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html')))

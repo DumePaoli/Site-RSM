@@ -105,8 +105,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <a
-                          href="https://github.com/dumepaoli/rust-server-manger2/releases/latest"
-                          target="_blank" rel="noreferrer"
+                          href="/download"
                           className="btn-secondary text-xs py-2 px-3"
                         >
                           <Download size={13} /> Télécharger

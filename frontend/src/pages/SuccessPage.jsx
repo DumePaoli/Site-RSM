@@ -86,8 +86,7 @@ export default function SuccessPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="https://github.com/dumepaoli/rust-server-manger2/releases/latest"
-            target="_blank" rel="noreferrer"
+          <a href="/download"
             className="btn-primary justify-center">
             <Download size={16} /> Télécharger RSM Pro
           </a>
