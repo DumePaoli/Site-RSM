@@ -5,7 +5,8 @@ const path       = require('path')
 const cors       = require('cors')
 const bcrypt     = require('bcryptjs')
 const jwt        = require('jsonwebtoken')
-const stripe     = require('stripe')(process.env.STRIPE_SECRET_KEY || '')
+let _stripe = null
+const getStripe = () => { if (!_stripe && process.env.STRIPE_SECRET_KEY) _stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); return _stripe }
 const nodemailer = require('nodemailer')
 const axios      = require('axios')
 const { db, init } = require('./db')
@@ -164,7 +165,7 @@ app.post('/api/checkout/create', async (req, res) => {
     const orderId = info.insertId
     if (payment_method === 'stripe') {
       if (!process.env.STRIPE_SECRET_KEY) return res.status(500).json({ detail: 'Stripe non configuré' })
-      const session = await stripe.checkout.sessions.create({
+      const session = await getStripe().checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [{ price_data: { currency: product.currency, product_data: { name: product.name }, unit_amount: Math.round(amount * 100) }, quantity: 1 }],
         mode: 'payment', customer_email: email,
@@ -199,7 +200,7 @@ app.post('/api/checkout/paypal-capture', async (req, res) => {
 
 app.post('/api/webhooks/stripe', async (req, res) => {
   let event
-  try { event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET) }
+  try { event = getStripe().webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET) }
   catch { return res.status(400).send('Invalid signature') }
   if (event.type === 'checkout.session.completed') {
     const orderId = parseInt(event.data.object.metadata?.order_id)
