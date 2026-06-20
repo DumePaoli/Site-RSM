@@ -1,3 +1,4 @@
+process.on("uncaughtException", e => { require("fs").appendFileSync(__dirname + "/crash.log", new Date().toISOString() + " " + e.stack + "\n") })
 require('dotenv').config()
 const express    = require('express')
 const path       = require('path')
