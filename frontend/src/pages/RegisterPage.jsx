@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { register } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import { UserPlus } from 'lucide-react'
@@ -7,6 +7,8 @@ import { UserPlus } from 'lucide-react'
 export default function RegisterPage() {
   const { setAuth } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const redirectTo = params.get('redirect') || '/dashboard'
   const [name, setName]     = useState('')
   const [email, setEmail]   = useState('')
   const [pass, setPass]     = useState('')
@@ -21,7 +23,7 @@ export default function RegisterPage() {
     try {
       const r = await register({ email, password: pass, name })
       setAuth(r.token, r.customer)
-      navigate('/dashboard')
+      navigate(redirectTo)
     } catch (e) {
       setError(e.response?.data?.detail || 'Erreur lors de l\'inscription')
     } finally {

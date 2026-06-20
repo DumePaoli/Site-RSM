@@ -141,10 +141,12 @@ app.post('/api/coupons/check', async (req, res) => {
 })
 
 // ── Checkout
-app.post('/api/checkout/create', async (req, res) => {
+app.post('/api/checkout/create', authMiddleware, async (req, res) => {
   try {
-    const { product_slug, email, coupon_code = '', payment_method = 'stripe' } = req.body
-    if (!email) return res.status(400).json({ detail: 'Email requis' })
+    const { product_slug, coupon_code = '', payment_method = 'stripe' } = req.body
+    const customer = await db.get('SELECT * FROM customers WHERE id = ?', [req.user.sub])
+    if (!customer) return res.status(401).json({ detail: 'Compte introuvable' })
+    const email = customer.email
     const bl = await db.get('SELECT id FROM blacklist WHERE email = ?', [email.toLowerCase()])
     if (bl) return res.status(403).json({ detail: 'Accès refusé' })
     const product = await db.get('SELECT * FROM products WHERE slug = ? AND active = 1', [product_slug])
@@ -159,8 +161,8 @@ app.post('/api/checkout/create', async (req, res) => {
     }
     const amount = Math.max(0, Math.round((product.price - discount) * 100) / 100)
     const info = await db.run(
-      'INSERT INTO orders (product_id, email, amount, currency, payment_method, coupon_code, discount) VALUES (?,?,?,?,?,?,?)',
-      [product.id, email.toLowerCase(), amount, product.currency, payment_method, usedCoupon, discount]
+      'INSERT INTO orders (product_id, email, amount, currency, payment_method, coupon_code, discount, customer_id) VALUES (?,?,?,?,?,?,?,?)',
+      [product.id, email.toLowerCase(), amount, product.currency, payment_method, usedCoupon, discount, customer.id]
     )
     const orderId = info.insertId
     if (payment_method === 'stripe') {

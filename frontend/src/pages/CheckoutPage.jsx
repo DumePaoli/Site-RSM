@@ -1,21 +1,19 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { CheckCircle2, Tag, CreditCard, Wallet, ArrowRight, Lock } from 'lucide-react'
+import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { CheckCircle2, Tag, CreditCard, ArrowRight, Lock, LogIn } from 'lucide-react'
 import { getProducts, checkCoupon, createCheckout } from '../api/client'
-
-const PLAN_LABELS = { '1m': '1 Mois', '3m': '3 Mois', 'lifetime': 'À Vie' }
+import { useAuth } from '../contexts/AuthContext'
 
 export default function CheckoutPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const [products, setProducts]       = useState([])
   const [selectedPlan, setSelected]   = useState(params.get('plan') || 'lifetime')
-  const [email, setEmail]             = useState('')
   const [coupon, setCoupon]           = useState('')
   const [couponResult, setCouponRes]  = useState(null)
   const [couponError, setCouponErr]   = useState('')
-  const [paymentMethod, setPayment]   = useState('stripe')
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState('')
 
@@ -33,6 +31,30 @@ export default function CheckoutPage() {
   const discount = couponResult ? (product?.price || 0) * couponResult.discount_pct / 100 : 0
   const total = product ? Math.max(0, product.price - discount) : 0
 
+  const redirectParam = `?redirect=/checkout${params.get('plan') ? `?plan=${params.get('plan')}` : ''}`
+
+  if (!user) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="w-14 h-14 bg-rust-500/10 border border-rust-500/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <LogIn size={24} className="text-rust-500" />
+          </div>
+          <h1 className="text-2xl font-black text-white mb-2">Compte requis</h1>
+          <p className="text-surface-400 mb-8">Créez un compte pour acheter et retrouver votre licence à tout moment dans votre espace.</p>
+          <div className="flex flex-col gap-3">
+            <Link to={`/register${redirectParam}`} className="btn-primary justify-center py-3 text-base">
+              Créer un compte
+            </Link>
+            <Link to={`/login${redirectParam}`} className="btn-secondary justify-center py-3">
+              J'ai déjà un compte
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const applyCode = async () => {
     setCouponErr('')
     setCouponRes(null)
@@ -45,21 +67,15 @@ export default function CheckoutPage() {
   }
 
   const submit = async () => {
-    if (!email) return setError('Entrez votre email')
     setLoading(true)
     setError('')
     try {
       const r = await createCheckout({
         product_slug: selectedPlan,
-        email,
         coupon_code: couponResult ? coupon : '',
-        payment_method: paymentMethod,
+        payment_method: 'stripe',
       })
-      if (paymentMethod === 'stripe') {
-        window.location.href = r.checkout_url
-      } else {
-        navigate(`/success?order=${r.order_id}`)
-      }
+      window.location.href = r.checkout_url
     } catch (e) {
       setError(e.response?.data?.detail || 'Erreur lors du paiement')
     } finally {
@@ -71,7 +87,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen py-16 px-4">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-black text-white mb-2">Finaliser l'achat</h1>
-        <p className="text-surface-400 mb-10">Livraison instantanée par email après paiement.</p>
+        <p className="text-surface-400 mb-10">Votre licence sera enregistrée sur votre compte après paiement.</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left — form */}
@@ -105,17 +121,17 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Email */}
+            {/* Account info */}
             <div className="card">
-              <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Votre email</h2>
-              <input
-                type="email"
-                placeholder="votre@email.com"
-                className="input"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-              />
-              <p className="text-surface-400 text-xs mt-2">Votre clé de licence sera envoyée à cette adresse.</p>
+              <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Compte</h2>
+              <div className="flex items-center justify-between bg-surface-800 rounded-xl px-4 py-3">
+                <div>
+                  <div className="text-white text-sm font-medium">{user.name || user.email}</div>
+                  <div className="text-surface-400 text-xs">{user.email}</div>
+                </div>
+                <CheckCircle2 size={16} className="text-rust-500 flex-shrink-0" />
+              </div>
+              <p className="text-surface-400 text-xs mt-2">La licence sera enregistrée sur ce compte.</p>
             </div>
 
             {/* Coupon */}
@@ -181,7 +197,7 @@ export default function CheckoutPage() {
               </div>
 
               <ul className="space-y-2 text-xs text-surface-400">
-                {['Toutes les fonctionnalités incluses', 'Livraison instantanée par email', 'Support Discord inclus', 'Mises à jour gratuites'].map(f => (
+                {['Toutes les fonctionnalités incluses', 'Licence enregistrée sur votre compte', 'Support Discord inclus', 'Mises à jour gratuites'].map(f => (
                   <li key={f} className="flex items-center gap-2">
                     <CheckCircle2 size={12} className="text-rust-500 flex-shrink-0" /> {f}
                   </li>

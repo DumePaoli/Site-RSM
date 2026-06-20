@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { login } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import { LogIn } from 'lucide-react'
@@ -7,6 +7,8 @@ import { LogIn } from 'lucide-react'
 export default function LoginPage() {
   const { setAuth } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const redirectTo = params.get('redirect') || '/dashboard'
   const [email, setEmail]   = useState('')
   const [pass, setPass]     = useState('')
   const [error, setError]   = useState('')
@@ -19,7 +21,7 @@ export default function LoginPage() {
     try {
       const r = await login({ email, password: pass })
       setAuth(r.token, r.customer)
-      navigate('/dashboard')
+      navigate(redirectTo)
     } catch (e) {
       setError(e.response?.data?.detail || 'Identifiants incorrects')
     } finally {
@@ -56,9 +58,6 @@ export default function LoginPage() {
         <p className="text-center text-surface-400 text-sm mt-6">
           Pas encore de compte ?{' '}
           <Link to="/register" className="text-rust-500 hover:underline">Créer un compte</Link>
-        </p>
-        <p className="text-center text-surface-400 text-sm mt-2">
-          <Link to="/checkout" className="text-rust-500 hover:underline">Acheter sans compte</Link>
         </p>
       </div>
     </div>
