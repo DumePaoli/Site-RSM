@@ -92,6 +92,11 @@ async function checkNewRelease() {
 // ── Events ─────────────────────────────────────────────────────────────────
 client.once(Events.ClientReady, async () => {
   console.log(`[Bot] Connecté en tant que ${client.user.tag}`)
+  // Force fetch de tous les channels du guild pour remplir le cache
+  try {
+    const guild = client.guilds.cache.get(GUILD_ID)
+    if (guild) await guild.channels.fetch()
+  } catch(e) { console.error('[Bot] Erreur fetch channels:', e.message) }
   await registerCommands()
   await checkNewRelease()
   setInterval(checkNewRelease, 3600_000)
