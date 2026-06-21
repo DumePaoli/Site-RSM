@@ -358,8 +358,8 @@ app.get('/api/admin/bot/stats', adminMiddleware, (req, res) => {
   catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-app.get('/api/admin/bot/channels', adminMiddleware, (req, res) => {
-  try { res.json(getTextChannels()) }
+app.get('/api/admin/bot/channels', adminMiddleware, async (req, res) => {
+  try { res.json(await getTextChannels()) }
   catch(e) { res.status(500).json({ detail: e.message }) }
 })
 

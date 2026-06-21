@@ -294,10 +294,11 @@ function getBotStats() {
   }
 }
 
-function getTextChannels() {
+async function getTextChannels() {
   if (!client.isReady()) return []
   const guild = client.guilds.cache.get(GUILD_ID)
   if (!guild) return []
+  await guild.channels.fetch().catch(() => {})
   return guild.channels.cache
     .filter(c => c.type === ChannelType.GuildText)
     .map(c => ({ id: c.id, name: c.name }))
