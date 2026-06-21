@@ -42,7 +42,8 @@ export default function BotPage() {
   async function handleLogin(e) {
     e.preventDefault()
     try {
-      await adminLogin(pass)
+      const r = await adminLogin(pass)
+      localStorage.setItem('rsm_token', r.token)
       localStorage.setItem('rsm_admin', '1')
       setAuthed(true)
     } catch {
@@ -52,7 +53,13 @@ export default function BotPage() {
 
   useEffect(() => {
     if (!authed) return
-    adminBotStats().then(setStats).catch(() => {})
+    adminBotStats().then(setStats).catch(e => {
+      if (e.response?.status === 401 || e.response?.status === 403) {
+        localStorage.removeItem('rsm_admin')
+        localStorage.removeItem('rsm_token')
+        setAuthed(false)
+      }
+    })
     adminBotChannels().then(setChannels).catch(() => {})
   }, [authed])
 
