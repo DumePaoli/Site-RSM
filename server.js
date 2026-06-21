@@ -377,9 +377,9 @@ app.delete('/api/admin/bot/tickets/:id', adminMiddleware, async (req, res) => {
 
 app.post('/api/admin/bot/send-embed', adminMiddleware, async (req, res) => {
   try {
-    const { channelId, title, description, color, footer } = req.body
+    const { channelId, title, description, color, footer, image, thumbnail } = req.body
     if (!channelId || !description) return res.status(400).json({ detail: 'channelId et description requis' })
-    await sendEmbed(channelId, { title, description, color, footer })
+    await sendEmbed(channelId, { title, description, color, footer, image, thumbnail })
     res.json({ ok: true })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })

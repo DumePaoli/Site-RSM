@@ -31,6 +31,8 @@ export default function BotPage() {
   const [embedDesc, setEmbedDesc] = useState('')
   const [embedColor, setEmbedColor] = useState('#c12814')
   const [embedFooter, setEmbedFooter] = useState('')
+  const [embedImage, setEmbedImage] = useState('')
+  const [embedThumbnail, setEmbedThumbnail] = useState('')
   const [embedSending, setEmbedSending] = useState(false)
   const [embedOk, setEmbedOk] = useState(false)
   const [embedErr, setEmbedErr] = useState('')
@@ -86,7 +88,7 @@ export default function BotPage() {
     e.preventDefault()
     setEmbedSending(true); setEmbedOk(false); setEmbedErr('')
     try {
-      await adminBotSendEmbed({ channelId: embedChannel, title: embedTitle, description: embedDesc, color: embedColor, footer: embedFooter })
+      await adminBotSendEmbed({ channelId: embedChannel, title: embedTitle, description: embedDesc, color: embedColor, footer: embedFooter, image: embedImage, thumbnail: embedThumbnail })
       setEmbedOk(true)
       setTimeout(() => setEmbedOk(false), 3000)
     } catch(e) {
@@ -227,6 +229,14 @@ export default function BotPage() {
               <label className="label">Footer (optionnel)</label>
               <input value={embedFooter} onChange={e => setEmbedFooter(e.target.value)} className="input w-full" placeholder="Texte du footer" />
             </div>
+            <div>
+              <label className="label">Image principale — URL (optionnel)</label>
+              <input value={embedImage} onChange={e => setEmbedImage(e.target.value)} className="input w-full" placeholder="https://..." />
+            </div>
+            <div>
+              <label className="label">Miniature (thumbnail) — URL (optionnel)</label>
+              <input value={embedThumbnail} onChange={e => setEmbedThumbnail(e.target.value)} className="input w-full" placeholder="https://..." />
+            </div>
             {embedErr && <p className="text-red-400 text-sm">{embedErr}</p>}
             {embedOk && <p className="text-green-400 text-sm flex items-center gap-1"><CheckCircle2 size={14} /> Embed envoyé !</p>}
             <button className="btn-primary w-full flex items-center justify-center gap-2" disabled={embedSending}>
@@ -240,9 +250,19 @@ export default function BotPage() {
             <div className="bg-[#1e1f22] rounded-lg p-4">
               <div className="flex gap-3">
                 <div className="w-1 rounded-full flex-shrink-0" style={{ background: previewColor }} />
-                <div className="space-y-1 min-w-0">
-                  {embedTitle && <p className="text-white font-semibold text-sm">{embedTitle}</p>}
-                  <p className="text-[#dbdee1] text-sm whitespace-pre-wrap break-words">{embedDesc || <span className="text-surface-600 italic">Description...</span>}</p>
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex justify-between gap-3">
+                    <div className="flex-1 space-y-1">
+                      {embedTitle && <p className="text-white font-semibold text-sm">{embedTitle}</p>}
+                      <p className="text-[#dbdee1] text-sm whitespace-pre-wrap break-words">{embedDesc || <span className="text-surface-600 italic">Description...</span>}</p>
+                    </div>
+                    {embedThumbnail && (
+                      <img src={embedThumbnail} alt="" className="w-16 h-16 rounded object-cover flex-shrink-0" onError={e => e.target.style.display='none'} />
+                    )}
+                  </div>
+                  {embedImage && (
+                    <img src={embedImage} alt="" className="w-full rounded mt-2 max-h-48 object-cover" onError={e => e.target.style.display='none'} />
+                  )}
                   {embedFooter && <p className="text-[#949ba4] text-xs mt-2 pt-2 border-t border-white/5">{embedFooter}</p>}
                 </div>
               </div>

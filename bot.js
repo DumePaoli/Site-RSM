@@ -262,15 +262,17 @@ async function closeTicket(channelId) {
   await channel.delete()
 }
 
-async function sendEmbed(channelId, { title, description, color, footer }) {
+async function sendEmbed(channelId, { title, description, color, footer, image, thumbnail }) {
   const channel = client.channels.cache.get(channelId)
   if (!channel) throw new Error('Channel introuvable')
   const embed = new EmbedBuilder()
-    .setTitle(title || '')
     .setDescription(description || '')
     .setColor(parseInt((color || '#c12814').replace('#', ''), 16))
     .setTimestamp()
+  if (title) embed.setTitle(title)
   if (footer) embed.setFooter({ text: footer })
+  if (image) embed.setImage(image)
+  if (thumbnail) embed.setThumbnail(thumbnail)
   await channel.send({ embeds: [embed] })
 }
 
