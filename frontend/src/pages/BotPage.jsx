@@ -94,6 +94,7 @@ export default function BotPage() {
   useEffect(() => {
     if (authed && tab === 'Tickets') loadTickets()
     if (authed && tab === 'Bienvenue') {
+      adminBotChannels().then(setChannels).catch(() => {})
       adminBotGetWelcomeConfig().then(d => {
         if (d.welcome) setWc(d.welcome)
         if (d.goodbye) setGc(d.goodbye)
