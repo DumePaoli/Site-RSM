@@ -54,3 +54,4 @@ export const adminBotTickets = () => api.get('/api/admin/bot/tickets').then(r =>
 export const adminBotCloseTicket = (id) => api.delete(`/api/admin/bot/tickets/${id}`).then(r => r.data)
 export const adminBotSendEmbed = (d) => api.post('/api/admin/bot/send-embed', d).then(r => r.data)
 export const adminBotAnnounceRelease = () => api.post('/api/admin/bot/announce-release').then(r => r.data)
+export const adminBotDebug = () => api.get('/api/admin/bot/debug').then(r => r.data)

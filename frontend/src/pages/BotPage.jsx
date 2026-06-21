@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   adminLogin, adminBotStats, adminBotChannels, adminBotTickets,
-  adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease
+  adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease, adminBotDebug
 } from '../api/client'
 import { Bot, Users, Hash, Shield, Ticket, Send, Megaphone, LogIn, X, RefreshCw, CheckCircle2 } from 'lucide-react'
 
@@ -40,6 +40,7 @@ export default function BotPage() {
   const [announceLoading, setAnnounceLoading] = useState(false)
   const [announceOk, setAnnounceOk] = useState(false)
   const [announceErr, setAnnounceErr] = useState('')
+  const [debugInfo, setDebugInfo] = useState(null)
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -311,9 +312,17 @@ export default function BotPage() {
           </p>
           {announceErr && <p className="text-red-400 text-sm">{announceErr}</p>}
           {announceOk && <p className="text-green-400 text-sm flex items-center gap-1"><CheckCircle2 size={14} /> Annonce envoyée !</p>}
-          <button onClick={handleAnnounce} disabled={announceLoading} className="btn-primary flex items-center gap-2">
-            <Megaphone size={15} /> {announceLoading ? 'Envoi...' : 'Lancer l\'annonce'}
-          </button>
+          <div className="flex gap-3 flex-wrap">
+            <button onClick={handleAnnounce} disabled={announceLoading} className="btn-primary flex items-center gap-2">
+              <Megaphone size={15} /> {announceLoading ? 'Envoi...' : "Lancer l'annonce"}
+            </button>
+            <button onClick={() => adminBotDebug().then(setDebugInfo).catch(e => setDebugInfo({ error: e.response?.data?.detail || e.message }))} className="btn-secondary flex items-center gap-2 text-sm">
+              Diagnostic
+            </button>
+          </div>
+          {debugInfo && (
+            <pre className="bg-black/40 rounded p-3 text-xs text-surface-300 overflow-x-auto">{JSON.stringify(debugInfo, null, 2)}</pre>
+          )}
         </div>
       )}
     </div>
