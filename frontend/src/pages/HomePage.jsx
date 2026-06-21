@@ -12,17 +12,17 @@ import { t } from '../i18n'
 /* ─────────────────────────────────── DATA ────────────────────────────────── */
 
 const SCREENSHOTS = {
-  dashboard:  '/screenshots/dashboard.png',
-  console:    '/screenshots/console.png',
-  rcon:       '/screenshots/rcon.png',
-  players:    '/screenshots/joueurs.png',
-  wipe:       '/screenshots/wipe.png',
-  backup:     '/screenshots/save.png',
-  discord:    '/screenshots/discord.png',
-  plugins:    '/screenshots/plugins.png',
-  scheduling: '/screenshots/programtion.png',
-  settings:   '/screenshots/r%C3%A9glages.png',
-  servers:    '/screenshots/servers.png',
+  dashboard:  '/dashboard.png',
+  console:    '/console.png',
+  rcon:       '/rcon.png',
+  players:    '/joueurs.png',
+  wipe:       '/wipe.png',
+  backup:     '/save.png',
+  discord:    '/discord.png',
+  plugins:    '/plugins.png',
+  scheduling: '/programtion.png',
+  settings:   '/r%C3%A9glages.png',
+  servers:    '/servers.png',
 }
 
 const FEATURES = [
