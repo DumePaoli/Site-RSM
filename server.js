@@ -10,7 +10,7 @@ const getStripe = () => { if (!_stripe && process.env.STRIPE_SECRET_KEY) _stripe
 const nodemailer = require('nodemailer')
 const axios      = require('axios')
 const { db, init } = require('./db')
-const { startBot } = require('./bot')
+const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, triggerReleaseAnnounce } = require('./bot')
 
 const app  = express()
 const PORT = process.env.PORT || 3000
@@ -351,6 +351,41 @@ app.post('/api/admin/generate-license', adminMiddleware, async (req, res) => {
 
 app.get('/api/admin/manual-licenses', adminMiddleware, async (req, res) => {
   try { res.json(await db.all('SELECT * FROM manual_licenses ORDER BY created_at DESC')) }
+  catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+// ── Bot control routes ──────────────────────────────────────────────────────
+app.get('/api/admin/bot/stats', adminMiddleware, (req, res) => {
+  try { res.json(getBotStats()) }
+  catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.get('/api/admin/bot/channels', adminMiddleware, (req, res) => {
+  try { res.json(getTextChannels()) }
+  catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.get('/api/admin/bot/tickets', adminMiddleware, (req, res) => {
+  try { res.json(getOpenTickets()) }
+  catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.delete('/api/admin/bot/tickets/:id', adminMiddleware, async (req, res) => {
+  try { await closeTicket(req.params.id); res.json({ ok: true }) }
+  catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.post('/api/admin/bot/send-embed', adminMiddleware, async (req, res) => {
+  try {
+    const { channelId, title, description, color, footer } = req.body
+    if (!channelId || !description) return res.status(400).json({ detail: 'channelId et description requis' })
+    await sendEmbed(channelId, { title, description, color, footer })
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.post('/api/admin/bot/announce-release', adminMiddleware, async (req, res) => {
+  try { await triggerReleaseAnnounce(); res.json({ ok: true }) }
   catch(e) { res.status(500).json({ detail: e.message }) }
 })
 

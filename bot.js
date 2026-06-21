@@ -217,4 +217,66 @@ function startBot() {
   client.login(TOKEN).catch(e => console.error('[Bot] Erreur login:', e.message))
 }
 
-module.exports = { startBot }
+// ── Bot control API ────────────────────────────────────────────────────────
+function getBotStats() {
+  if (!client.isReady()) return { online: false }
+  const guild = client.guilds.cache.get(GUILD_ID)
+  if (!guild) return { online: true, guild: null }
+  return {
+    online: true,
+    tag: client.user.tag,
+    memberCount: guild.memberCount,
+    channelCount: guild.channels.cache.size,
+    roleCount: guild.roles.cache.size,
+    guildName: guild.name,
+    guildIcon: guild.iconURL({ size: 64 }),
+    uptime: Math.floor(client.uptime / 1000),
+  }
+}
+
+function getTextChannels() {
+  if (!client.isReady()) return []
+  const guild = client.guilds.cache.get(GUILD_ID)
+  if (!guild) return []
+  return guild.channels.cache
+    .filter(c => c.type === ChannelType.GuildText)
+    .map(c => ({ id: c.id, name: c.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function getOpenTickets() {
+  if (!client.isReady()) return []
+  const guild = client.guilds.cache.get(GUILD_ID)
+  if (!guild) return []
+  return guild.channels.cache
+    .filter(c => c.type === ChannelType.GuildText && c.name.startsWith('ticket-'))
+    .map(c => ({ id: c.id, name: c.name, createdAt: c.createdAt }))
+    .sort((a, b) => b.createdAt - a.createdAt)
+}
+
+async function closeTicket(channelId) {
+  const channel = client.channels.cache.get(channelId)
+  if (!channel) throw new Error('Channel introuvable')
+  await channel.send('🔒 Ticket fermé par un administrateur.')
+  await new Promise(r => setTimeout(r, 2000))
+  await channel.delete()
+}
+
+async function sendEmbed(channelId, { title, description, color, footer }) {
+  const channel = client.channels.cache.get(channelId)
+  if (!channel) throw new Error('Channel introuvable')
+  const embed = new EmbedBuilder()
+    .setTitle(title || '')
+    .setDescription(description || '')
+    .setColor(parseInt((color || '#c12814').replace('#', ''), 16))
+    .setTimestamp()
+  if (footer) embed.setFooter({ text: footer })
+  await channel.send({ embeds: [embed] })
+}
+
+async function triggerReleaseAnnounce() {
+  lastKnownVersion = null
+  await checkNewRelease()
+}
+
+module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, triggerReleaseAnnounce }
