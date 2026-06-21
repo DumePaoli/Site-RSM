@@ -40,6 +40,8 @@ export default function BotPage() {
   const [announceLoading, setAnnounceLoading] = useState(false)
   const [announceOk, setAnnounceOk] = useState(false)
   const [announceErr, setAnnounceErr] = useState('')
+  const [announceVersion, setAnnounceVersion] = useState('')
+  const [announceBody, setAnnounceBody] = useState('')
   const [debugInfo, setDebugInfo] = useState(null)
 
   async function handleLogin(e) {
@@ -98,11 +100,11 @@ export default function BotPage() {
     setEmbedSending(false)
   }
 
-  async function handleAnnounce() {
-    if (!confirm('Forcer une annonce de la dernière release GitHub ?')) return
+  async function handleAnnounce(e) {
+    e.preventDefault()
     setAnnounceLoading(true); setAnnounceOk(false); setAnnounceErr('')
     try {
-      await adminBotAnnounceRelease()
+      await adminBotAnnounceRelease({ tag_name: announceVersion, body: announceBody })
       setAnnounceOk(true)
       setTimeout(() => setAnnounceOk(false), 4000)
     } catch(e) {
@@ -308,21 +310,23 @@ export default function BotPage() {
         <div className="card p-8 space-y-5 max-w-lg">
           <h2 className="text-white font-semibold flex items-center gap-2"><Megaphone size={16} /> Annoncer une release</h2>
           <p className="text-surface-500 text-sm">
-            Force le bot à récupérer la dernière release GitHub et à poster l'annonce dans le channel changelog, même si la version n'a pas changé.
+            Poste une annonce de release dans le channel changelog du Discord.
           </p>
-          {announceErr && <p className="text-red-400 text-sm">{announceErr}</p>}
-          {announceOk && <p className="text-green-400 text-sm flex items-center gap-1"><CheckCircle2 size={14} /> Annonce envoyée !</p>}
-          <div className="flex gap-3 flex-wrap">
-            <button onClick={handleAnnounce} disabled={announceLoading} className="btn-primary flex items-center gap-2">
+          <form onSubmit={handleAnnounce} className="space-y-4">
+            <div>
+              <label className="label">Version <span className="text-rust-500">*</span></label>
+              <input value={announceVersion} onChange={e => setAnnounceVersion(e.target.value)} className="input w-full" placeholder="v1.1.39" required />
+            </div>
+            <div>
+              <label className="label">Contenu / Changelog (optionnel)</label>
+              <textarea value={announceBody} onChange={e => setAnnounceBody(e.target.value)} className="input w-full h-32 resize-none" placeholder={"### Nouveautés\n- Ajout de la fonctionnalité X\n\n### Corrections\n- Fix du bug Y"} />
+            </div>
+            {announceErr && <p className="text-red-400 text-sm">{announceErr}</p>}
+            {announceOk && <p className="text-green-400 text-sm flex items-center gap-1"><CheckCircle2 size={14} /> Annonce envoyée !</p>}
+            <button type="submit" disabled={announceLoading} className="btn-primary flex items-center gap-2">
               <Megaphone size={15} /> {announceLoading ? 'Envoi...' : "Lancer l'annonce"}
             </button>
-            <button onClick={() => adminBotDebug().then(setDebugInfo).catch(e => setDebugInfo({ error: e.response?.data?.detail || e.message }))} className="btn-secondary flex items-center gap-2 text-sm">
-              Diagnostic
-            </button>
-          </div>
-          {debugInfo && (
-            <pre className="bg-black/40 rounded p-3 text-xs text-surface-300 overflow-x-auto">{JSON.stringify(debugInfo, null, 2)}</pre>
-          )}
+          </form>
         </div>
       )}
     </div>

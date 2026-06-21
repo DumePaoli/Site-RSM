@@ -384,12 +384,17 @@ app.post('/api/admin/bot/send-embed', adminMiddleware, async (req, res) => {
 
 app.post('/api/admin/bot/announce-release', adminMiddleware, async (req, res) => {
   try {
-    const r = await axios.get('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest', { headers: { 'User-Agent': 'RSM-Site' } })
-    if (!r.data.tag_name) return res.status(500).json({ detail: 'Pas de release trouvée sur GitHub' })
-    await triggerReleaseAnnounce(r.data)
-    res.json({ ok: true, version: r.data.tag_name })
+    const { tag_name, body, html_url, published_at } = req.body
+    if (!tag_name) return res.status(400).json({ detail: 'tag_name requis' })
+    await triggerReleaseAnnounce({
+      tag_name,
+      body: body || '',
+      html_url: html_url || `https://github.com/DumePaoli/Rust-Server-Manger2/releases/tag/${tag_name}`,
+      published_at: published_at || new Date().toISOString()
+    })
+    res.json({ ok: true })
   } catch(e) {
-    res.status(500).json({ detail: e.response ? `GitHub ${e.response.status}: ${e.response.data?.message}` : e.message })
+    res.status(500).json({ detail: e.message })
   }
 })
 
