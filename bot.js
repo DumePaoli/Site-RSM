@@ -325,9 +325,10 @@ async function closeTicket(channelId) {
 
 async function sendEmbed(channelId, { title, description, color, footer, image, thumbnail }) {
   const guild = client.guilds.cache.get(GUILD_ID)
-  const channel = guild?.channels.cache.get(channelId)
-    ?? await guild?.channels.fetch(channelId).catch(() => null)
-  if (!channel) throw new Error('Channel introuvable')
+  if (!guild) throw new Error('Guild introuvable')
+  await guild.channels.fetch().catch(() => {})
+  const channel = guild.channels.cache.get(channelId)
+  if (!channel) throw new Error(`Channel ${channelId} introuvable (${guild.channels.cache.size} channels en cache)`)
   const embed = new EmbedBuilder()
     .setDescription(description || '')
     .setColor(parseInt((color || '#c12814').replace('#', ''), 16))
@@ -341,9 +342,10 @@ async function sendEmbed(channelId, { title, description, color, footer, image, 
 
 async function triggerReleaseAnnounce({ tag_name, body, html_url, published_at }) {
   const guild = client.guilds.cache.get(GUILD_ID)
-  const channel = guild?.channels.cache.get(CHANGELOG_CHANNEL_ID)
-    ?? await guild?.channels.fetch(CHANGELOG_CHANNEL_ID).catch(() => null)
-  if (!channel) throw new Error(`Channel ${CHANGELOG_CHANNEL_ID} introuvable`)
+  if (!guild) throw new Error('Guild introuvable')
+  await guild.channels.fetch().catch(() => {})
+  const channel = guild.channels.cache.get(CHANGELOG_CHANNEL_ID)
+  if (!channel) throw new Error(`Channel ${CHANGELOG_CHANNEL_ID} introuvable (${guild.channels.cache.size} channels en cache)`)
 
   const embed = new EmbedBuilder()
     .setTitle(`🚀 Rust Server Manager Pro ${tag_name}`)
@@ -364,9 +366,10 @@ async function triggerReleaseAnnounce({ tag_name, body, html_url, published_at }
 
 async function sendTicketEmbed(channelId, { title, description, color, footer, image, thumbnail }) {
   const guild = client.guilds.cache.get(GUILD_ID)
-  const channel = guild?.channels.cache.get(channelId)
-    ?? await guild?.channels.fetch(channelId).catch(() => null)
-  if (!channel) throw new Error('Channel introuvable')
+  if (!guild) throw new Error('Guild introuvable')
+  await guild.channels.fetch().catch(() => {})
+  const channel = guild.channels.cache.get(channelId)
+  if (!channel) throw new Error(`Channel ${channelId} introuvable (${guild.channels.cache.size} channels en cache)`)
   const embed = new EmbedBuilder()
     .setDescription(description || 'Clique sur le bouton ci-dessous pour ouvrir un ticket.')
     .setColor(parseInt((color || '#c12814').replace('#', ''), 16))
