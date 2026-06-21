@@ -277,28 +277,40 @@ async function sendEmbed(channelId, { title, description, color, footer, image, 
 }
 
 async function triggerReleaseAnnounce() {
+  const headers = { 'User-Agent': 'RSM-Bot' }
+  if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
+
+  let ghData
   try {
-    const headers = { 'User-Agent': 'RSM-Bot' }
-    if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
     const { data } = await axios.get(
       'https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest',
       { headers }
     )
-    if (!data.tag_name) throw new Error('Pas de release trouvée')
-    const channel = client.channels.cache.get(CHANGELOG_CHANNEL_ID)
-    if (!channel) throw new Error('Channel changelog introuvable')
-    const embed = new EmbedBuilder()
-      .setTitle(`🚀 Rust Server Manager Pro ${data.tag_name}`)
-      .setDescription(data.body ? data.body.slice(0, 4000) : 'Nouvelle version disponible.')
-      .setColor(0xc12814)
-      .setURL(data.html_url)
-      .setTimestamp(new Date(data.published_at))
-      .setFooter({ text: 'RSM Pro — Annonce manuelle' })
-    await channel.send({ embeds: [embed] })
-    lastKnownVersion = data.tag_name
+    ghData = data
   } catch(e) {
-    throw new Error(e.message)
+    throw new Error(`GitHub API erreur: ${e.response?.status} ${e.response?.data?.message || e.message}`)
   }
+
+  if (!ghData.tag_name) throw new Error(`GitHub retourne pas de tag_name. Réponse: ${JSON.stringify(ghData).slice(0, 200)}`)
+
+  const channel = client.channels.cache.get(CHANGELOG_CHANNEL_ID)
+  if (!channel) throw new Error(`Channel ${CHANGELOG_CHANNEL_ID} introuvable dans le cache`)
+
+  const embed = new EmbedBuilder()
+    .setTitle(`🚀 Rust Server Manager Pro ${ghData.tag_name}`)
+    .setDescription(ghData.body ? ghData.body.slice(0, 4000) : 'Nouvelle version disponible.')
+    .setColor(0xc12814)
+    .setURL(ghData.html_url)
+    .setTimestamp(new Date(ghData.published_at))
+    .setFooter({ text: 'RSM Pro — Annonce manuelle' })
+
+  try {
+    await channel.send({ embeds: [embed] })
+  } catch(e) {
+    throw new Error(`Envoi Discord échoué: ${e.message}`)
+  }
+
+  lastKnownVersion = ghData.tag_name
 }
 
 function getBotDebug() {
