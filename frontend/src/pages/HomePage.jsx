@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import {
-  Zap, Shield, RotateCcw, Archive, Calendar,
-  Plug, Users, Terminal, ChevronDown, ChevronRight,
-  ArrowRight, Download, Check, Star, Activity, Cpu, HardDrive
+  ChevronDown, ChevronRight,
+  ArrowRight, Download, Check, Star, X
 } from 'lucide-react'
 import { getProducts } from '../api/client'
 import { useLang } from '../contexts/LangContext'
@@ -113,6 +112,7 @@ export default function HomePage() {
   const [products, setProducts] = useState([])
   const [activeFeature, setActiveFeature] = useState(0)
   const [version, setVersion] = useState('v1.1.24')
+  const [lightbox, setLightbox] = useState(null)
 
   useEffect(() => {
     const base = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -200,10 +200,8 @@ export default function HomePage() {
           </div>
 
           {/* Hero screenshot */}
-          <div className="float max-w-3xl mx-auto">
-            <AppWindow title="Rust Server Manager Pro — Dashboard">
-              <img src={SCREENSHOTS.dashboard} alt="RSM Pro Dashboard" className="w-full rounded-lg" />
-            </AppWindow>
+          <div className="float max-w-3xl mx-auto rounded-xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
+            <img src={SCREENSHOTS.dashboard} alt="RSM Pro Dashboard" className="w-full" />
           </div>
         </div>
       </section>
@@ -230,9 +228,12 @@ export default function HomePage() {
             </div>
 
             <div className="lg:sticky lg:top-28">
-              <AppWindow title={`Rust Server Manager Pro — ${translatedFeatures[activeFeature].title}`}>
+              <button
+                onClick={() => setLightbox(translatedFeatures[activeFeature].preview.props.src)}
+                className="block w-full rounded-xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50 hover:border-rust-500/50 transition-colors cursor-zoom-in"
+              >
                 {translatedFeatures[activeFeature].preview}
-              </AppWindow>
+              </button>
               <p className="text-center text-xs text-surface-500 mt-3">
                 {translatedFeatures[activeFeature].desc}
               </p>
@@ -373,6 +374,26 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      {/* ── LIGHTBOX ─────────────────────────────────────────────────────── */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white/60 hover:text-white bg-white/10 rounded-full p-2"
+            onClick={() => setLightbox(null)}
+          >
+            <X size={20} />
+          </button>
+          <img
+            src={lightbox}
+            alt="Screenshot"
+            className="max-w-full max-h-[90vh] rounded-xl shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
     </>
   )
 }
