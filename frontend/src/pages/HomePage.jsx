@@ -12,17 +12,17 @@ import { t } from '../i18n'
 /* ─────────────────────────────────── DATA ────────────────────────────────── */
 
 const SCREENSHOTS = {
-  dashboard:  'https://i.postimg.cc/w362J6xy/dashboard-(2).png',
-  console:    'https://i.postimg.cc/t7XkPXR1/console.png',
-  rcon:       'https://i.postimg.cc/hhpr1Hh3/rcon.png',
-  players:    'https://i.postimg.cc/z30jF93n/joueurs.png',
-  wipe:       'https://i.postimg.cc/bsrRC32K/wipe.png',
-  backup:     'https://i.postimg.cc/Tp1c7CWN/save.png',
-  discord:    'https://i.postimg.cc/6T9cR96G/discord.png',
-  plugins:    'https://i.postimg.cc/HjB29fj2/plugins.png',
-  scheduling: 'https://i.postimg.cc/WtXnwQtH/programation.png',
-  settings:   'https://i.postimg.cc/2Vyxc2Bw/reglages.png',
-  servers:    'https://i.postimg.cc/RNhTsXnb/servers.png',
+  dashboard:  '/screenshots/dashboard.png',
+  console:    '/screenshots/console.png',
+  rcon:       '/screenshots/rcon.png',
+  players:    '/screenshots/joueurs.png',
+  wipe:       '/screenshots/wipe.png',
+  backup:     '/screenshots/save.png',
+  discord:    '/screenshots/discord.png',
+  plugins:    '/screenshots/plugins.png',
+  scheduling: '/screenshots/programtion.png',
+  settings:   '/screenshots/r%C3%A9glages.png',
+  servers:    '/screenshots/servers.png',
 }
 
 const FEATURES = [
