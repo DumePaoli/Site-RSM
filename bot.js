@@ -228,13 +228,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   // ── Modal ticket soumis ──
   if (interaction.isModalSubmit() && interaction.customId === 'ticket_modal') {
+    await interaction.deferReply({ ephemeral: true })
     const sujet = interaction.fields.getTextInputValue('ticket_sujet')
     const guild = interaction.guild
     const existing = guild.channels.cache.find(
       c => c.name === `ticket-${interaction.user.username.toLowerCase().replace(/\s/g, '-')}`
     )
     if (existing) {
-      return interaction.reply({ content: `Tu as déjà un ticket ouvert: ${existing}`, ephemeral: true })
+      return interaction.editReply({ content: `Tu as déjà un ticket ouvert: ${existing}` })
     }
     const perms = [
       { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
@@ -261,7 +262,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       .setColor(0xc12814)
       .setTimestamp()
     await channel.send({ embeds: [embed], components: [row] })
-    await interaction.reply({ content: `Ticket créé: ${channel}`, ephemeral: true })
+    await interaction.editReply({ content: `Ticket créé: ${channel}` })
   }
 
   // ── Bouton fermer ──
