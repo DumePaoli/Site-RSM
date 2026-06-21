@@ -229,40 +229,44 @@ client.on(Events.InteractionCreate, async (interaction) => {
   // ── Modal ticket soumis ──
   if (interaction.isModalSubmit() && interaction.customId === 'ticket_modal') {
     await interaction.deferReply({ ephemeral: true })
-    const sujet = interaction.fields.getTextInputValue('ticket_sujet')
-    const guild = interaction.guild
-    const existing = guild.channels.cache.find(
-      c => c.name === `ticket-${interaction.user.username.toLowerCase().replace(/\s/g, '-')}`
-    )
-    if (existing) {
-      return interaction.editReply({ content: `Tu as déjà un ticket ouvert: ${existing}` })
-    }
-    const perms = [
-      { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
-      { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
-    ]
-    if (SUPPORT_ROLE_ID) {
-      perms.push({ id: SUPPORT_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] })
-    }
-    const channel = await guild.channels.create({
-      name: `ticket-${interaction.user.username.toLowerCase().replace(/\s/g, '-')}`,
-      type: ChannelType.GuildText,
-      parent: TICKET_CATEGORY_ID || null,
-      permissionOverwrites: perms,
-    })
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('close_ticket').setLabel('Fermer le ticket').setStyle(ButtonStyle.Danger).setEmoji('🔒')
-    )
-    const embed = new EmbedBuilder()
-      .setTitle(`🎫 Ticket — ${sujet}`)
-      .setDescription(
-        `Bonjour ${interaction.user}! Notre équipe va te répondre dès que possible.\n\n` +
-        `**Sujet:** ${sujet}\n\nDécris ton problème en détail ci-dessous.`
+    try {
+      const sujet = interaction.fields.getTextInputValue('ticket_sujet')
+      const guild = interaction.guild
+      const existing = guild.channels.cache.find(
+        c => c.name === `ticket-${interaction.user.username.toLowerCase().replace(/\s/g, '-')}`
       )
-      .setColor(0xc12814)
-      .setTimestamp()
-    await channel.send({ embeds: [embed], components: [row] })
-    await interaction.editReply({ content: `Ticket créé: ${channel}` })
+      if (existing) {
+        return interaction.editReply({ content: `Tu as déjà un ticket ouvert: ${existing}` })
+      }
+      const perms = [
+        { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
+        { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+      ]
+      if (SUPPORT_ROLE_ID) {
+        perms.push({ id: SUPPORT_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] })
+      }
+      const channel = await guild.channels.create({
+        name: `ticket-${interaction.user.username.toLowerCase().replace(/\s/g, '-')}`,
+        type: ChannelType.GuildText,
+        parent: TICKET_CATEGORY_ID || null,
+        permissionOverwrites: perms,
+      })
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('close_ticket').setLabel('Fermer le ticket').setStyle(ButtonStyle.Danger).setEmoji('🔒')
+      )
+      const embed = new EmbedBuilder()
+        .setTitle(`🎫 Ticket — ${sujet}`)
+        .setDescription(
+          `Bonjour ${interaction.user}! Notre équipe va te répondre dès que possible.\n\n` +
+          `**Sujet:** ${sujet}\n\nDécris ton problème en détail ci-dessous.`
+        )
+        .setColor(0xc12814)
+        .setTimestamp()
+      await channel.send({ embeds: [embed], components: [row] })
+      await interaction.editReply({ content: `Ticket créé: ${channel}` })
+    } catch(e) {
+      await interaction.editReply({ content: `❌ Erreur: ${e.message}` }).catch(() => {})
+    }
   }
 
   // ── Bouton fermer ──
