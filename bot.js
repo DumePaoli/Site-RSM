@@ -274,29 +274,16 @@ async function sendEmbed(channelId, { title, description, color, footer, image, 
   await channel.send({ embeds: [embed] })
 }
 
-async function triggerReleaseAnnounce() {
-  let ghData
-  try {
-    const { data } = await axios.get(
-      'https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest',
-      { headers: { 'User-Agent': 'RSM-Bot' } }
-    )
-    ghData = data
-  } catch(e) {
-    throw new Error(`GitHub API erreur: ${e.response?.status} ${e.response?.data?.message || e.message}`)
-  }
-
-  if (!ghData.tag_name) throw new Error(`GitHub retourne pas de tag_name. Réponse: ${JSON.stringify(ghData).slice(0, 200)}`)
-
+async function triggerReleaseAnnounce({ tag_name, body, html_url, published_at }) {
   const channel = client.channels.cache.get(CHANGELOG_CHANNEL_ID)
   if (!channel) throw new Error(`Channel ${CHANGELOG_CHANNEL_ID} introuvable dans le cache`)
 
   const embed = new EmbedBuilder()
-    .setTitle(`🚀 Rust Server Manager Pro ${ghData.tag_name}`)
-    .setDescription(ghData.body ? ghData.body.slice(0, 4000) : 'Nouvelle version disponible.')
+    .setTitle(`🚀 Rust Server Manager Pro ${tag_name}`)
+    .setDescription(body ? body.slice(0, 4000) : 'Nouvelle version disponible.')
     .setColor(0xc12814)
-    .setURL(ghData.html_url)
-    .setTimestamp(new Date(ghData.published_at))
+    .setURL(html_url)
+    .setTimestamp(new Date(published_at))
     .setFooter({ text: 'RSM Pro — Annonce manuelle' })
 
   try {
@@ -305,7 +292,7 @@ async function triggerReleaseAnnounce() {
     throw new Error(`Envoi Discord échoué: ${e.message}`)
   }
 
-  lastKnownVersion = ghData.tag_name
+  lastKnownVersion = tag_name
 }
 
 function getBotDebug() {
