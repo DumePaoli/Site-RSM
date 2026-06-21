@@ -277,8 +277,28 @@ async function sendEmbed(channelId, { title, description, color, footer, image, 
 }
 
 async function triggerReleaseAnnounce() {
-  lastKnownVersion = null
-  await checkNewRelease()
+  try {
+    const headers = { 'User-Agent': 'RSM-Bot' }
+    if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
+    const { data } = await axios.get(
+      'https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest',
+      { headers }
+    )
+    if (!data.tag_name) throw new Error('Pas de release trouvée')
+    const channel = client.channels.cache.get(CHANGELOG_CHANNEL_ID)
+    if (!channel) throw new Error('Channel changelog introuvable')
+    const embed = new EmbedBuilder()
+      .setTitle(`🚀 Rust Server Manager Pro ${data.tag_name}`)
+      .setDescription(data.body ? data.body.slice(0, 4000) : 'Nouvelle version disponible.')
+      .setColor(0xc12814)
+      .setURL(data.html_url)
+      .setTimestamp(new Date(data.published_at))
+      .setFooter({ text: 'RSM Pro — Annonce manuelle' })
+    await channel.send({ embeds: [embed] })
+    lastKnownVersion = data.tag_name
+  } catch(e) {
+    throw new Error(e.message)
+  }
 }
 
 module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, triggerReleaseAnnounce }
