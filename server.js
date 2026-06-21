@@ -10,7 +10,7 @@ const getStripe = () => { if (!_stripe && process.env.STRIPE_SECRET_KEY) _stripe
 const nodemailer = require('nodemailer')
 const axios      = require('axios')
 const { db, init } = require('./db')
-const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce } = require('./bot')
+const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getWelcomeConfig, setWelcomeConfig } = require('./bot')
 
 const app  = express()
 const PORT = process.env.PORT || 3000
@@ -405,6 +405,31 @@ app.post('/api/admin/bot/announce-release', adminMiddleware, async (req, res) =>
   } catch(e) {
     res.status(500).json({ detail: e.message })
   }
+})
+
+app.get('/api/admin/bot/welcome-config', adminMiddleware, (req, res) => {
+  res.json(getWelcomeConfig())
+})
+app.post('/api/admin/bot/welcome-config', adminMiddleware, (req, res) => {
+  try { setWelcomeConfig(req.body); res.json({ ok: true }) }
+  catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+// Public status endpoint
+app.get('/api/status', async (req, res) => {
+  const botStats = getBotStats()
+  let licenseOk = false
+  try {
+    await axios.get(`${process.env.LICENSE_SERVER_URL || 'https://rsm-license-server.fly.dev'}/health`, { timeout: 5000 })
+    licenseOk = true
+  } catch {}
+  res.json({
+    site: true,
+    bot: botStats.online || false,
+    botTag: botStats.tag || null,
+    memberCount: botStats.memberCount || null,
+    licenseServer: licenseOk,
+  })
 })
 
 app.get('/api/admin/bot/debug', adminMiddleware, (req, res) => {

@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import {
   adminLogin, adminBotStats, adminBotChannels, adminBotTickets,
   adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease, adminBotDebug,
-  adminBotSendTicketEmbed
+  adminBotSendTicketEmbed, adminBotGetWelcomeConfig, adminBotSetWelcomeConfig
 } from '../api/client'
 import { Bot, Users, Hash, Shield, Ticket, Send, Megaphone, LogIn, X, RefreshCw, CheckCircle2 } from 'lucide-react'
 
-const TABS = ['Stats', 'Embed', 'Ticket Embed', 'Tickets', 'Release']
+const TABS = ['Stats', 'Embed', 'Ticket Embed', 'Tickets', 'Bienvenue', 'Release']
 
 const PRESET_COLORS = [
   { label: 'Rouge RSM', value: '#c12814' },
@@ -56,6 +56,12 @@ export default function BotPage() {
   const [announceBody, setAnnounceBody] = useState('')
   const [debugInfo, setDebugInfo] = useState(null)
 
+  const [wc, setWc] = useState({ enabled: true, title: '', description: '', color: '#c12814', footer: '', thumbnail: true })
+  const [gc, setGc] = useState({ enabled: false, channelId: '', title: '', description: '', color: '#6b7280', footer: '' })
+  const [wcSaving, setWcSaving] = useState(false)
+  const [wcOk, setWcOk] = useState(false)
+  const [wcErr, setWcErr] = useState('')
+
   async function handleLogin(e) {
     e.preventDefault()
     try {
@@ -87,6 +93,12 @@ export default function BotPage() {
 
   useEffect(() => {
     if (authed && tab === 'Tickets') loadTickets()
+    if (authed && tab === 'Bienvenue') {
+      adminBotGetWelcomeConfig().then(d => {
+        if (d.welcome) setWc(d.welcome)
+        if (d.goodbye) setGc(d.goodbye)
+      }).catch(() => {})
+    }
   }, [authed, tab])
 
   async function handleCloseTicket(id) {
@@ -97,6 +109,16 @@ export default function BotPage() {
     } catch(e) {
       alert(e.response?.data?.detail || 'Erreur')
     }
+  }
+
+  async function handleSaveWelcome(e) {
+    e.preventDefault()
+    setWcSaving(true); setWcOk(false); setWcErr('')
+    try {
+      await adminBotSetWelcomeConfig({ welcome: wc, goodbye: gc })
+      setWcOk(true); setTimeout(() => setWcOk(false), 3000)
+    } catch(e) { setWcErr(e.response?.data?.detail || 'Erreur') }
+    setWcSaving(false)
   }
 
   async function handleSendTicketEmbed(e) {
@@ -297,6 +319,131 @@ export default function BotPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bienvenue */}
+      {tab === 'Bienvenue' && (
+        <form onSubmit={handleSaveWelcome} className="space-y-8 max-w-2xl">
+          {/* Welcome */}
+          <div className="card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-white font-semibold flex items-center gap-2"><Users size={16} /> Message de bienvenue</h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-xs text-surface-400">Activé</span>
+                <div onClick={() => setWc(w => ({ ...w, enabled: !w.enabled }))}
+                  className={`w-10 h-5 rounded-full transition-colors relative ${wc.enabled ? 'bg-rust-500' : 'bg-surface-700'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${wc.enabled ? 'left-5' : 'left-0.5'}`} />
+                </div>
+              </label>
+            </div>
+            <div>
+              <label className="label">Titre</label>
+              <input value={wc.title} onChange={e => setWc(w => ({ ...w, title: e.target.value }))} className="input w-full" placeholder="Bienvenue ! 👋" />
+            </div>
+            <div>
+              <label className="label">Description <span className="text-surface-500 text-xs">— variables: {'{user}'} {'{username}'} {'{server}'} {'{memberCount}'}</span></label>
+              <textarea value={wc.description} onChange={e => setWc(w => ({ ...w, description: e.target.value }))} className="input w-full h-32 resize-none" />
+            </div>
+            <div className="flex gap-6 flex-wrap">
+              <div>
+                <label className="label">Couleur</label>
+                <div className="flex items-center gap-2">
+                  {PRESET_COLORS.map(p => (
+                    <button key={p.value} type="button" onClick={() => setWc(w => ({ ...w, color: p.value }))}
+                      className={`w-7 h-7 rounded-full border-2 transition-all ${wc.color === p.value ? 'border-white scale-110' : 'border-transparent'}`}
+                      style={{ background: p.value }} />
+                  ))}
+                  <input type="color" value={wc.color} onChange={e => setWc(w => ({ ...w, color: e.target.value }))} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer self-end pb-1">
+                <input type="checkbox" checked={wc.thumbnail} onChange={e => setWc(w => ({ ...w, thumbnail: e.target.checked }))} className="accent-rust-500" />
+                <span className="text-sm text-surface-400">Avatar en miniature</span>
+              </label>
+            </div>
+            <div>
+              <label className="label">Footer (optionnel)</label>
+              <input value={wc.footer} onChange={e => setWc(w => ({ ...w, footer: e.target.value }))} className="input w-full" />
+            </div>
+            {/* Preview */}
+            <div className="bg-[#1e1f22] rounded-lg p-4">
+              <div className="flex gap-3">
+                <div className="w-1 rounded-full flex-shrink-0" style={{ background: wc.color }} />
+                <div className="flex-1 space-y-1">
+                  <div className="flex justify-between gap-3">
+                    <div>
+                      {wc.title && <p className="text-white font-semibold text-sm">{wc.title}</p>}
+                      <p className="text-[#dbdee1] text-sm whitespace-pre-wrap">{wc.description.replace(/{user}/g, '@Joueur').replace(/{username}/g, 'Joueur').replace(/{server}/g, 'RSM Pro').replace(/{memberCount}/g, '42')}</p>
+                    </div>
+                    {wc.thumbnail && <div className="w-12 h-12 rounded-full bg-surface-700 flex-shrink-0 flex items-center justify-center text-surface-500 text-xs">Avatar</div>}
+                  </div>
+                  {wc.footer && <p className="text-[#949ba4] text-xs mt-2 pt-2 border-t border-white/5">{wc.footer}</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Goodbye */}
+          <div className="card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-white font-semibold flex items-center gap-2"><X size={16} /> Message de départ</h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-xs text-surface-400">Activé</span>
+                <div onClick={() => setGc(g => ({ ...g, enabled: !g.enabled }))}
+                  className={`w-10 h-5 rounded-full transition-colors relative ${gc.enabled ? 'bg-rust-500' : 'bg-surface-700'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${gc.enabled ? 'left-5' : 'left-0.5'}`} />
+                </div>
+              </label>
+            </div>
+            <div>
+              <label className="label">Channel (laisser vide = même que bienvenue)</label>
+              <select value={gc.channelId} onChange={e => setGc(g => ({ ...g, channelId: e.target.value }))} className="input w-full">
+                <option value="">Même channel que bienvenue</option>
+                {channels.map(c => <option key={c.id} value={c.id}>#{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Titre</label>
+              <input value={gc.title} onChange={e => setGc(g => ({ ...g, title: e.target.value }))} className="input w-full" placeholder="Au revoir 👋" />
+            </div>
+            <div>
+              <label className="label">Description <span className="text-surface-500 text-xs">— variables: {'{user}'} {'{username}'} {'{server}'} {'{memberCount}'}</span></label>
+              <textarea value={gc.description} onChange={e => setGc(g => ({ ...g, description: e.target.value }))} className="input w-full h-20 resize-none" />
+            </div>
+            <div>
+              <label className="label">Couleur</label>
+              <div className="flex items-center gap-2">
+                {PRESET_COLORS.map(p => (
+                  <button key={p.value} type="button" onClick={() => setGc(g => ({ ...g, color: p.value }))}
+                    className={`w-7 h-7 rounded-full border-2 transition-all ${gc.color === p.value ? 'border-white scale-110' : 'border-transparent'}`}
+                    style={{ background: p.value }} />
+                ))}
+                <input type="color" value={gc.color} onChange={e => setGc(g => ({ ...g, color: e.target.value }))} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+              </div>
+            </div>
+            <div>
+              <label className="label">Footer (optionnel)</label>
+              <input value={gc.footer} onChange={e => setGc(g => ({ ...g, footer: e.target.value }))} className="input w-full" />
+            </div>
+            {/* Preview */}
+            <div className="bg-[#1e1f22] rounded-lg p-4">
+              <div className="flex gap-3">
+                <div className="w-1 rounded-full flex-shrink-0" style={{ background: gc.color }} />
+                <div className="flex-1 space-y-1">
+                  {gc.title && <p className="text-white font-semibold text-sm">{gc.title}</p>}
+                  <p className="text-[#dbdee1] text-sm whitespace-pre-wrap">{gc.description.replace(/{user}/g, '@Joueur').replace(/{username}/g, 'Joueur').replace(/{server}/g, 'RSM Pro').replace(/{memberCount}/g, '41')}</p>
+                  {gc.footer && <p className="text-[#949ba4] text-xs mt-2 pt-2 border-t border-white/5">{gc.footer}</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {wcErr && <p className="text-red-400 text-sm">{wcErr}</p>}
+          {wcOk && <p className="text-green-400 text-sm flex items-center gap-1"><CheckCircle2 size={14} /> Sauvegardé !</p>}
+          <button type="submit" disabled={wcSaving} className="btn-primary flex items-center gap-2">
+            <CheckCircle2 size={15} /> {wcSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+          </button>
+        </form>
       )}
 
       {/* Ticket Embed */}

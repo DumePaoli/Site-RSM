@@ -25,6 +25,7 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildPresences,
   ]
 })
 
@@ -55,6 +56,24 @@ async function registerCommands() {
   } catch (e) {
     console.error('[Bot] Erreur enregistrement commandes:', e.message)
   }
+}
+
+// ── Welcome/Goodbye config ─────────────────────────────────────────────────
+let welcomeConfig = {
+  enabled: true,
+  title: 'Bienvenue sur le Discord RSM Pro ! 👋',
+  description: `Salut {user}! Bienvenue sur le serveur officiel de **Rust Server Manager Pro**.\n\n📋 Consulte **#faq** pour les questions fréquentes\n🎫 Utilise **/ticket** pour ouvrir un ticket de support\n🔑 Utilise **/verify** avec ta clé de licence pour obtenir le rôle vérifié`,
+  color: '#c12814',
+  footer: '',
+  thumbnail: true,
+}
+let goodbyeConfig = {
+  enabled: false,
+  channelId: '',
+  title: 'Au revoir 👋',
+  description: `{username} a quitté le serveur.`,
+  color: '#6b7280',
+  footer: '',
 }
 
 // ── Release checker ────────────────────────────────────────────────────────
@@ -106,20 +125,45 @@ client.once(Events.ClientReady, async () => {
 
 // Welcome
 client.on(Events.GuildMemberAdd, async (member) => {
-  const channel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID)
+  if (!welcomeConfig.enabled) return
+  const guild = member.guild
+  await guild.channels.fetch().catch(() => {})
+  const channel = guild.channels.cache.get(WELCOME_CHANNEL_ID)
   if (!channel) return
+  const desc = welcomeConfig.description
+    .replace(/{user}/g, `${member}`)
+    .replace(/{username}/g, member.user.username)
+    .replace(/{server}/g, guild.name)
+    .replace(/{memberCount}/g, guild.memberCount)
   const embed = new EmbedBuilder()
-    .setTitle('Bienvenue sur le Discord RSM Pro ! 👋')
-    .setDescription(
-      `Salut ${member}! Bienvenue sur le serveur officiel de **Rust Server Manager Pro**.\n\n` +
-      `📋 Consulte **#faq** pour les questions fréquentes\n` +
-      `🎫 Utilise **/ticket** pour ouvrir un ticket de support\n` +
-      `🔑 Utilise **/verify** avec ta clé de licence pour obtenir le rôle vérifié`
-    )
-    .setColor(0xc12814)
-    .setThumbnail(member.user.displayAvatarURL())
+    .setDescription(desc)
+    .setColor(parseInt((welcomeConfig.color || '#c12814').replace('#', ''), 16))
     .setTimestamp()
-  await channel.send({ embeds: [embed] })
+  if (welcomeConfig.title) embed.setTitle(welcomeConfig.title)
+  if (welcomeConfig.footer) embed.setFooter({ text: welcomeConfig.footer })
+  if (welcomeConfig.thumbnail) embed.setThumbnail(member.user.displayAvatarURL())
+  await channel.send({ embeds: [embed] }).catch(() => {})
+})
+
+client.on(Events.GuildMemberRemove, async (member) => {
+  if (!goodbyeConfig.enabled) return
+  const guild = member.guild
+  await guild.channels.fetch().catch(() => {})
+  const channelId = goodbyeConfig.channelId || WELCOME_CHANNEL_ID
+  const channel = guild.channels.cache.get(channelId)
+  if (!channel) return
+  const desc = goodbyeConfig.description
+    .replace(/{user}/g, `${member}`)
+    .replace(/{username}/g, member.user.username)
+    .replace(/{server}/g, guild.name)
+    .replace(/{memberCount}/g, guild.memberCount)
+  const embed = new EmbedBuilder()
+    .setDescription(desc)
+    .setColor(parseInt((goodbyeConfig.color || '#6b7280').replace('#', ''), 16))
+    .setTimestamp()
+  if (goodbyeConfig.title) embed.setTitle(goodbyeConfig.title)
+  if (goodbyeConfig.footer) embed.setFooter({ text: goodbyeConfig.footer })
+  await channel.send({ embeds: [embed] }).catch(() => {})
 })
 
 // Interactions
@@ -389,6 +433,9 @@ async function sendTicketEmbed(channelId, { title, description, color, footer, i
   await channel.send({ embeds: [embed], components: [row] })
 }
 
+function getWelcomeConfig() { return { welcome: welcomeConfig, goodbye: goodbyeConfig } }
+function setWelcomeConfig(data) { if (data.welcome) Object.assign(welcomeConfig, data.welcome); if (data.goodbye) Object.assign(goodbyeConfig, data.goodbye) }
+
 function getBotDebug() {
   return {
     ready: client.isReady(),
@@ -402,4 +449,4 @@ function getBotDebug() {
   }
 }
 
-module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getBotDebug }
+module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getBotDebug, getWelcomeConfig, setWelcomeConfig }

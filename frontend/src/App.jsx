@@ -11,6 +11,7 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import AdminPage from './pages/AdminPage'
 import BotPage from './pages/BotPage'
+import StatusPage from './pages/StatusPage'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/admin"     element={<AdminPage />} />
               <Route path="/bot"       element={<BotPage />} />
+              <Route path="/status"   element={<StatusPage />} />
             </Routes>
           </main>
           <Footer />
