@@ -11,189 +11,30 @@ import { t } from '../i18n'
 
 /* ─────────────────────────────────── DATA ────────────────────────────────── */
 
+const SCREENSHOTS = {
+  dashboard:  'https://i.postimg.cc/w362J6xy/dashboard-(2).png',
+  console:    'https://i.postimg.cc/t7XkPXR1/console.png',
+  rcon:       'https://i.postimg.cc/hhpr1Hh3/rcon.png',
+  players:    'https://i.postimg.cc/z30jF93n/joueurs.png',
+  wipe:       'https://i.postimg.cc/bsrRC32K/wipe.png',
+  backup:     'https://i.postimg.cc/Tp1c7CWN/save.png',
+  discord:    'https://i.postimg.cc/6T9cR96G/discord.png',
+  plugins:    'https://i.postimg.cc/HjB29fj2/plugins.png',
+  scheduling: 'https://i.postimg.cc/WtXnwQtH/programation.png',
+  settings:   'https://i.postimg.cc/2Vyxc2Bw/reglages.png',
+  servers:    'https://i.postimg.cc/RNhTsXnb/servers.png',
+}
+
 const FEATURES = [
-  {
-    slug: 'dashboard',
-    title: 'Dashboard',
-    desc: 'Vue complète de votre serveur — statut, joueurs connectés, CPU, RAM et logs en temps réel depuis un seul écran.',
-    color: 'from-blue-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px] space-y-1.5">
-        <div className="grid grid-cols-2 gap-1.5 mb-2">
-          {[['STATUS','🟢 ONLINE','text-green-400'],['PLAYERS','18 / 50','text-rust-400'],['CPU','34%','text-blue-400'],['RAM','6.2 GB','text-purple-400']].map(([l,v,c])=>(
-            <div key={l} className="bg-black/40 rounded p-1.5">
-              <div className="text-surface-500 text-[9px] mb-0.5">{l}</div>
-              <div className={`font-bold ${c}`}>{v}</div>
-            </div>
-          ))}
-        </div>
-        <div className="bg-black/40 rounded p-2 space-y-1">
-          <div className="text-green-400">[18:42] PlayerA joined</div>
-          <div className="text-surface-400">[18:43] Auto-save done</div>
-          <div className="text-rust-400">[18:44] Wipe in 60 min ⚠</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    slug: 'console',
-    title: 'Console RCON',
-    desc: 'Terminal RCON intégré avec historique de commandes, auto-complétion et alias personnalisés.',
-    color: 'from-green-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px] space-y-1">
-        <div className="text-surface-500">$ oxide.reload *</div>
-        <div className="text-green-400">Reloading 12 plugins...</div>
-        <div className="text-surface-400">$ say "Wipe dans 5 min"</div>
-        <div className="text-green-400">Message broadcast sent</div>
-        <div className="text-surface-400">$ playerlist</div>
-        <div className="text-white">NightWolf_FR | 76561...</div>
-        <div className="text-white">Kryztalix | 76561...</div>
-        <div className="flex items-center gap-1 mt-1"><span className="text-rust-500">$</span><span className="cursor-blink">█</span></div>
-      </div>
-    ),
-  },
-  {
-    slug: 'players',
-    title: 'Gestion joueurs',
-    desc: 'Kick, ban, message privé, historique de présence — tout accessible depuis une interface claire.',
-    color: 'from-purple-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px] space-y-1.5">
-        {[['NightWolf_FR','2h 14m','🟢'],['Kryztalix','45m','🟢'],['AdminPvP','5h 02m','🟢']].map(([n,t,s])=>(
-          <div key={n} className="flex items-center justify-between bg-black/40 rounded px-2 py-1.5">
-            <span className="text-white">{s} {n}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-surface-500">{t}</span>
-              <span className="text-red-400 cursor-pointer hover:text-red-300">⊘</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    slug: 'wipe',
-    title: 'Wipe Manager',
-    desc: 'Planifiez vos wipes avec avertissements in-game automatiques à intervalles configurables.',
-    color: 'from-rust-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px] space-y-2">
-        <div className="bg-rust-500/10 border border-rust-500/30 rounded p-2">
-          <div className="text-rust-400 font-bold mb-1">WIPE PLANIFIÉ</div>
-          <div className="text-white">Jeudi 19:00 · Hebdo</div>
-        </div>
-        <div className="space-y-1 text-surface-400">
-          <div>⚠ Warning à 60 min</div>
-          <div>⚠ Warning à 30 min</div>
-          <div>⚠ Warning à 5 min</div>
-          <div className="text-green-400">✓ Auto-restart activé</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    slug: 'backup',
-    title: 'Sauvegardes auto',
-    desc: 'ZIP planifiés de votre carte et données oxide, avec rotation automatique et dossier configurable.',
-    color: 'from-yellow-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px] space-y-1.5">
-        {[
-          ['save_20250620_1900.zip','142 MB','✓'],
-          ['save_20250619_1900.zip','139 MB','✓'],
-          ['save_20250618_1900.zip','136 MB','✓'],
-        ].map(([f,s,st])=>(
-          <div key={f} className="flex items-center justify-between bg-black/40 rounded px-2 py-1.5">
-            <span className="text-surface-300 truncate">{f}</span>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-              <span className="text-surface-500">{s}</span>
-              <span className="text-green-400">{st}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    slug: 'discord',
-    title: 'Discord Bot',
-    desc: 'Notifications crash, relay chat Rust↔Discord, alertes de wipe et rapports journaliers automatiques.',
-    color: 'from-indigo-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px] space-y-1.5">
-        <div className="bg-[#5865f2]/10 border border-[#5865f2]/30 rounded p-2">
-          <div className="text-[#5865f2] font-bold mb-1.5">RSM Bot</div>
-          <div className="space-y-1 text-surface-300">
-            <div>🟢 Server is <span className="text-green-400">online</span></div>
-            <div>👥 Players: <span className="text-white">18/50</span></div>
-            <div>⚠️ Wipe in <span className="text-rust-400">60 min</span></div>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    slug: 'plugins',
-    title: 'Plugin Manager',
-    desc: 'Installez, mettez à jour et gérez vos plugins Carbon directement depuis l\'interface — plus de FTP.',
-    color: 'from-emerald-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px] space-y-1.5">
-        {[['BetterChat','2.3.1','✓ À jour'],['Kits','1.2.0','⬆ Update'],['ZoneManager','3.1.4','✓ À jour']].map(([n,v,st])=>(
-          <div key={n} className="flex items-center justify-between bg-black/40 rounded px-2 py-1.5">
-            <div>
-              <div className="text-white">{n}</div>
-              <div className="text-surface-500">v{v}</div>
-            </div>
-            <span className={st.includes('À') ? 'text-green-400' : 'text-yellow-400'}>{st}</span>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    slug: 'monitoring',
-    title: 'Monitoring',
-    desc: 'Graphiques CPU, RAM et joueurs sur la dernière heure. Détectez les pics avant qu\'ils causent des crashs.',
-    color: 'from-cyan-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px]">
-        <div className="space-y-2">
-          {[['CPU','34%',34,'text-blue-400','bg-blue-400'],['RAM','62%',62,'text-purple-400','bg-purple-400'],['Players','36%',36,'text-rust-400','bg-rust-400']].map(([l,v,pct,tc,bc])=>(
-            <div key={l}>
-              <div className="flex justify-between mb-1">
-                <span className="text-surface-400">{l}</span>
-                <span className={tc}>{v}</span>
-              </div>
-              <div className="h-1.5 bg-surface-700 rounded-full overflow-hidden">
-                <div className={`h-full ${bc} rounded-full`} style={{width:`${pct}%`}} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    ),
-  },
-  {
-    slug: 'autostart',
-    title: 'Auto-redémarrage',
-    desc: 'Détection de crash en temps réel et redémarrage automatique — votre serveur ne reste jamais offline.',
-    color: 'from-red-500/20 to-transparent',
-    preview: (
-      <div className="font-mono text-[10px] space-y-2">
-        <div className="bg-red-500/10 border border-red-500/30 rounded p-2">
-          <div className="text-red-400 font-bold mb-1">CRASH DÉTECTÉ</div>
-          <div className="text-surface-400">19:03:42 — Process exited</div>
-        </div>
-        <div className="space-y-1 text-surface-400">
-          <div className="text-yellow-400">⟳ Redémarrage en cours...</div>
-          <div className="text-green-400">✓ Serveur en ligne (4s)</div>
-          <div>Discord notified ✓</div>
-        </div>
-      </div>
-    ),
-  },
+  { slug: 'dashboard',  title: 'Dashboard',        desc: '', color: '', preview: <img src={SCREENSHOTS.dashboard}  alt="Dashboard"  className="w-full rounded-lg" /> },
+  { slug: 'console',    title: 'Console RCON',     desc: '', color: '', preview: <img src={SCREENSHOTS.rcon}       alt="RCON"       className="w-full rounded-lg" /> },
+  { slug: 'players',    title: 'Gestion joueurs',  desc: '', color: '', preview: <img src={SCREENSHOTS.players}   alt="Joueurs"    className="w-full rounded-lg" /> },
+  { slug: 'wipe',       title: 'Wipe Manager',     desc: '', color: '', preview: <img src={SCREENSHOTS.wipe}      alt="Wipe"       className="w-full rounded-lg" /> },
+  { slug: 'backup',     title: 'Sauvegardes auto', desc: '', color: '', preview: <img src={SCREENSHOTS.backup}    alt="Sauvegardes" className="w-full rounded-lg" /> },
+  { slug: 'discord',    title: 'Discord Bot',      desc: '', color: '', preview: <img src={SCREENSHOTS.discord}   alt="Discord"    className="w-full rounded-lg" /> },
+  { slug: 'plugins',    title: 'Plugin Manager',   desc: '', color: '', preview: <img src={SCREENSHOTS.plugins}   alt="Plugins"    className="w-full rounded-lg" /> },
+  { slug: 'monitoring', title: 'Monitoring',       desc: '', color: '', preview: <img src={SCREENSHOTS.scheduling} alt="Monitoring" className="w-full rounded-lg" /> },
+  { slug: 'autostart',  title: 'Auto-redémarrage', desc: '', color: '', preview: <img src={SCREENSHOTS.settings}  alt="Réglages"   className="w-full rounded-lg" /> },
 ]
 
 const REVIEWS = [
@@ -358,24 +199,10 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Hero window mockup */}
+          {/* Hero screenshot */}
           <div className="float max-w-3xl mx-auto">
-            <AppWindow title="RSM Pro — Dashboard">
-              <div className="grid grid-cols-4 gap-2 mb-3">
-                {[['STATUS','🟢 Online','text-green-400'],['PLAYERS','18 / 50','text-rust-400'],['CPU','34%','text-blue-400'],['RAM','6.2 GB','text-purple-400']].map(([l,v,c])=>(
-                  <div key={l} className="bg-black/30 rounded-lg p-3 text-center">
-                    <div className="text-[10px] text-surface-500 mb-1 font-mono">{l}</div>
-                    <div className={`text-sm font-bold font-mono ${c}`}>{v}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-black/30 rounded-lg p-3 font-mono text-xs space-y-1.5">
-                <div className="text-green-400">[18:42:03] NightWolf_FR joined the game</div>
-                <div className="text-surface-400">[18:42:11] Server auto-save completed</div>
-                <div className="text-rust-400">[18:43:00] ⚠ Wipe scheduled in 60 minutes</div>
-                <div className="text-blue-400">[18:43:05] Backup → save_20250620.zip (142 MB)</div>
-                <div className="text-green-400">[18:44:01] Kryztalix joined the game</div>
-              </div>
+            <AppWindow title="Rust Server Manager Pro — Dashboard">
+              <img src={SCREENSHOTS.dashboard} alt="RSM Pro Dashboard" className="w-full rounded-lg" />
             </AppWindow>
           </div>
         </div>
@@ -403,10 +230,8 @@ export default function HomePage() {
             </div>
 
             <div className="lg:sticky lg:top-28">
-              <AppWindow title={`RSM Pro — ${translatedFeatures[activeFeature].title}`}>
-                <div className={`bg-gradient-to-b ${translatedFeatures[activeFeature].color} rounded-lg p-3`}>
-                  {translatedFeatures[activeFeature].preview}
-                </div>
+              <AppWindow title={`Rust Server Manager Pro — ${translatedFeatures[activeFeature].title}`}>
+                {translatedFeatures[activeFeature].preview}
               </AppWindow>
               <p className="text-center text-xs text-surface-500 mt-3">
                 {translatedFeatures[activeFeature].desc}
