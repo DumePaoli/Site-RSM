@@ -1,7 +1,8 @@
 const {
   Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes,
   EmbedBuilder, PermissionFlagsBits, ChannelType,
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, Events
+  ActionRowBuilder, ButtonBuilder, ButtonStyle, Events,
+  ModalBuilder, TextInputBuilder, TextInputStyle
 } = require('discord.js')
 const axios = require('axios')
 
@@ -202,6 +203,60 @@ client.on(Events.InteractionCreate, async (interaction) => {
     setTimeout(() => interaction.channel.delete().catch(() => {}), 5000)
   }
 
+  // ── Bouton ouvrir ticket ──
+  if (interaction.isButton() && interaction.customId === 'open_ticket') {
+    const modal = new ModalBuilder()
+      .setCustomId('ticket_modal')
+      .setTitle('Ouvrir un ticket')
+    const sujetInput = new TextInputBuilder()
+      .setCustomId('ticket_sujet')
+      .setLabel('Décris ton problème')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('Ex: Problème de connexion, question sur une fonctionnalité...')
+      .setRequired(true)
+      .setMaxLength(500)
+    modal.addComponents(new ActionRowBuilder().addComponents(sujetInput))
+    await interaction.showModal(modal)
+  }
+
+  // ── Modal ticket soumis ──
+  if (interaction.isModalSubmit() && interaction.customId === 'ticket_modal') {
+    const sujet = interaction.fields.getTextInputValue('ticket_sujet')
+    const guild = interaction.guild
+    const existing = guild.channels.cache.find(
+      c => c.name === `ticket-${interaction.user.username.toLowerCase().replace(/\s/g, '-')}`
+    )
+    if (existing) {
+      return interaction.reply({ content: `Tu as déjà un ticket ouvert: ${existing}`, ephemeral: true })
+    }
+    const perms = [
+      { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
+      { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+    ]
+    if (SUPPORT_ROLE_ID) {
+      perms.push({ id: SUPPORT_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] })
+    }
+    const channel = await guild.channels.create({
+      name: `ticket-${interaction.user.username.toLowerCase().replace(/\s/g, '-')}`,
+      type: ChannelType.GuildText,
+      parent: TICKET_CATEGORY_ID || null,
+      permissionOverwrites: perms,
+    })
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('close_ticket').setLabel('Fermer le ticket').setStyle(ButtonStyle.Danger).setEmoji('🔒')
+    )
+    const embed = new EmbedBuilder()
+      .setTitle(`🎫 Ticket — ${sujet}`)
+      .setDescription(
+        `Bonjour ${interaction.user}! Notre équipe va te répondre dès que possible.\n\n` +
+        `**Sujet:** ${sujet}\n\nDécris ton problème en détail ci-dessous.`
+      )
+      .setColor(0xc12814)
+      .setTimestamp()
+    await channel.send({ embeds: [embed], components: [row] })
+    await interaction.reply({ content: `Ticket créé: ${channel}`, ephemeral: true })
+  }
+
   // ── Bouton fermer ──
   if (interaction.isButton() && interaction.customId === 'close_ticket') {
     await interaction.reply('🔒 Ticket fermé. Ce salon va être supprimé dans 5 secondes.')
@@ -295,6 +350,23 @@ async function triggerReleaseAnnounce({ tag_name, body, html_url, published_at }
   lastKnownVersion = tag_name
 }
 
+async function sendTicketEmbed(channelId, { title, description, color, footer, image, thumbnail }) {
+  const channel = client.channels.cache.get(channelId)
+  if (!channel) throw new Error('Channel introuvable')
+  const embed = new EmbedBuilder()
+    .setDescription(description || 'Clique sur le bouton ci-dessous pour ouvrir un ticket.')
+    .setColor(parseInt((color || '#c12814').replace('#', ''), 16))
+    .setTimestamp()
+  if (title) embed.setTitle(title)
+  if (footer) embed.setFooter({ text: footer })
+  if (image) embed.setImage(image)
+  if (thumbnail) embed.setThumbnail(thumbnail)
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('open_ticket').setLabel('Ouvrir un ticket').setStyle(ButtonStyle.Primary).setEmoji('🎫')
+  )
+  await channel.send({ embeds: [embed], components: [row] })
+}
+
 function getBotDebug() {
   return {
     ready: client.isReady(),
@@ -308,4 +380,4 @@ function getBotDebug() {
   }
 }
 
-module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, triggerReleaseAnnounce, getBotDebug }
+module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getBotDebug }

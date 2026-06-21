@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   adminLogin, adminBotStats, adminBotChannels, adminBotTickets,
-  adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease, adminBotDebug
+  adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease, adminBotDebug,
+  adminBotSendTicketEmbed
 } from '../api/client'
 import { Bot, Users, Hash, Shield, Ticket, Send, Megaphone, LogIn, X, RefreshCw, CheckCircle2 } from 'lucide-react'
 
-const TABS = ['Stats', 'Embed', 'Tickets', 'Release']
+const TABS = ['Stats', 'Embed', 'Ticket Embed', 'Tickets', 'Release']
 
 const PRESET_COLORS = [
   { label: 'Rouge RSM', value: '#c12814' },
@@ -33,6 +34,17 @@ export default function BotPage() {
   const [embedFooter, setEmbedFooter] = useState('')
   const [embedImage, setEmbedImage] = useState('')
   const [embedThumbnail, setEmbedThumbnail] = useState('')
+  const [ticketChannel, setTicketChannel] = useState('')
+  const [ticketTitle, setTicketTitle] = useState('Support RSM Pro')
+  const [ticketDesc, setTicketDesc] = useState('Tu as une question ou un problème ? Clique sur le bouton ci-dessous pour ouvrir un ticket, notre équipe te répondra dès que possible.')
+  const [ticketColor, setTicketColor] = useState('#c12814')
+  const [ticketFooter, setTicketFooter] = useState('RSM Pro — Support')
+  const [ticketImage, setTicketImage] = useState('')
+  const [ticketThumbnail, setTicketThumbnail] = useState('')
+  const [ticketSending, setTicketSending] = useState(false)
+  const [ticketOk, setTicketOk] = useState(false)
+  const [ticketErr, setTicketErr] = useState('')
+
   const [embedSending, setEmbedSending] = useState(false)
   const [embedOk, setEmbedOk] = useState(false)
   const [embedErr, setEmbedErr] = useState('')
@@ -85,6 +97,19 @@ export default function BotPage() {
     } catch(e) {
       alert(e.response?.data?.detail || 'Erreur')
     }
+  }
+
+  async function handleSendTicketEmbed(e) {
+    e.preventDefault()
+    setTicketSending(true); setTicketOk(false); setTicketErr('')
+    try {
+      await adminBotSendTicketEmbed({ channelId: ticketChannel, title: ticketTitle, description: ticketDesc, color: ticketColor, footer: ticketFooter, image: ticketImage, thumbnail: ticketThumbnail })
+      setTicketOk(true)
+      setTimeout(() => setTicketOk(false), 3000)
+    } catch(e) {
+      setTicketErr(e.response?.data?.detail || 'Erreur')
+    }
+    setTicketSending(false)
   }
 
   async function handleSendEmbed(e) {
@@ -268,6 +293,84 @@ export default function BotPage() {
                   )}
                   {embedFooter && <p className="text-[#949ba4] text-xs mt-2 pt-2 border-t border-white/5">{embedFooter}</p>}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ticket Embed */}
+      {tab === 'Ticket Embed' && (
+        <div className="grid md:grid-cols-2 gap-6">
+          <form onSubmit={handleSendTicketEmbed} className="card p-6 space-y-4">
+            <h2 className="text-white font-semibold flex items-center gap-2"><Ticket size={16} /> Embed avec bouton ticket</h2>
+            <div>
+              <label className="label">Channel</label>
+              <select value={ticketChannel} onChange={e => setTicketChannel(e.target.value)} className="input w-full" required>
+                <option value="">Sélectionner un channel</option>
+                {channels.map(c => <option key={c.id} value={c.id}>#{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Titre</label>
+              <input value={ticketTitle} onChange={e => setTicketTitle(e.target.value)} className="input w-full" />
+            </div>
+            <div>
+              <label className="label">Description</label>
+              <textarea value={ticketDesc} onChange={e => setTicketDesc(e.target.value)} className="input w-full h-24 resize-none" />
+            </div>
+            <div>
+              <label className="label">Couleur</label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {PRESET_COLORS.map(p => (
+                  <button key={p.value} type="button" onClick={() => setTicketColor(p.value)}
+                    className={`w-7 h-7 rounded-full border-2 transition-all ${ticketColor === p.value ? 'border-white scale-110' : 'border-transparent'}`}
+                    style={{ background: p.value }} />
+                ))}
+                <input type="color" value={ticketColor} onChange={e => setTicketColor(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+              </div>
+            </div>
+            <div>
+              <label className="label">Footer (optionnel)</label>
+              <input value={ticketFooter} onChange={e => setTicketFooter(e.target.value)} className="input w-full" />
+            </div>
+            <div>
+              <label className="label">Image principale — URL (optionnel)</label>
+              <input value={ticketImage} onChange={e => setTicketImage(e.target.value)} className="input w-full" placeholder="https://..." />
+            </div>
+            <div>
+              <label className="label">Miniature — URL (optionnel)</label>
+              <input value={ticketThumbnail} onChange={e => setTicketThumbnail(e.target.value)} className="input w-full" placeholder="https://..." />
+            </div>
+            {ticketErr && <p className="text-red-400 text-sm">{ticketErr}</p>}
+            {ticketOk && <p className="text-green-400 text-sm flex items-center gap-1"><CheckCircle2 size={14} /> Embed envoyé !</p>}
+            <button className="btn-primary w-full flex items-center justify-center gap-2" disabled={ticketSending}>
+              <Send size={14} /> {ticketSending ? 'Envoi...' : 'Envoyer'}
+            </button>
+          </form>
+
+          {/* Preview */}
+          <div className="space-y-3">
+            <p className="text-surface-500 text-xs uppercase tracking-wide">Aperçu</p>
+            <div className="bg-[#1e1f22] rounded-lg p-4 space-y-3">
+              <div className="flex gap-3">
+                <div className="w-1 rounded-full flex-shrink-0" style={{ background: ticketColor }} />
+                <div className="flex-1 space-y-1">
+                  <div className="flex justify-between gap-3">
+                    <div className="flex-1">
+                      {ticketTitle && <p className="text-white font-semibold text-sm">{ticketTitle}</p>}
+                      <p className="text-[#dbdee1] text-sm whitespace-pre-wrap">{ticketDesc}</p>
+                    </div>
+                    {ticketThumbnail && <img src={ticketThumbnail} alt="" className="w-16 h-16 rounded object-cover flex-shrink-0" onError={e => e.target.style.display='none'} />}
+                  </div>
+                  {ticketImage && <img src={ticketImage} alt="" className="w-full rounded max-h-48 object-cover" onError={e => e.target.style.display='none'} />}
+                  {ticketFooter && <p className="text-[#949ba4] text-xs mt-2 pt-2 border-t border-white/5">{ticketFooter}</p>}
+                </div>
+              </div>
+              <div>
+                <span className="inline-flex items-center gap-1.5 bg-[#5865f2] text-white text-xs font-medium px-3 py-1.5 rounded">
+                  🎫 Ouvrir un ticket
+                </span>
               </div>
             </div>
           </div>

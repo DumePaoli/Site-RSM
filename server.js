@@ -10,7 +10,7 @@ const getStripe = () => { if (!_stripe && process.env.STRIPE_SECRET_KEY) _stripe
 const nodemailer = require('nodemailer')
 const axios      = require('axios')
 const { db, init } = require('./db')
-const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, triggerReleaseAnnounce } = require('./bot')
+const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce } = require('./bot')
 
 const app  = express()
 const PORT = process.env.PORT || 3000
@@ -378,6 +378,15 @@ app.post('/api/admin/bot/send-embed', adminMiddleware, async (req, res) => {
     const { channelId, title, description, color, footer, image, thumbnail } = req.body
     if (!channelId || !description) return res.status(400).json({ detail: 'channelId et description requis' })
     await sendEmbed(channelId, { title, description, color, footer, image, thumbnail })
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.post('/api/admin/bot/send-ticket-embed', adminMiddleware, async (req, res) => {
+  try {
+    const { channelId, title, description, color, footer, image, thumbnail } = req.body
+    if (!channelId) return res.status(400).json({ detail: 'channelId requis' })
+    await sendTicketEmbed(channelId, { title, description, color, footer, image, thumbnail })
     res.json({ ok: true })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
