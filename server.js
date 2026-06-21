@@ -10,6 +10,7 @@ const getStripe = () => { if (!_stripe && process.env.STRIPE_SECRET_KEY) _stripe
 const nodemailer = require('nodemailer')
 const axios      = require('axios')
 const { db, init } = require('./db')
+const { startBot } = require('./bot')
 
 const app  = express()
 const PORT = process.env.PORT || 3000
@@ -365,6 +366,7 @@ app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dist',
 
 init().then(() => {
   app.listen(PORT, () => console.log(`RSM Shop running on port ${PORT}`))
+  startBot()
 }).catch(e => {
   console.error('DB init failed:', e.message)
   require('fs').appendFileSync(__dirname + '/crash.log', new Date().toISOString() + ' DB INIT: ' + e.stack + '\n')
