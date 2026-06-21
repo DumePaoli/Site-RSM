@@ -301,4 +301,17 @@ async function triggerReleaseAnnounce() {
   }
 }
 
-module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, triggerReleaseAnnounce }
+function getBotDebug() {
+  return {
+    ready: client.isReady(),
+    GUILD_ID,
+    CHANGELOG_CHANNEL_ID,
+    guildFound: !!client.guilds.cache.get(GUILD_ID),
+    changelogChannelFound: !!client.channels.cache.get(CHANGELOG_CHANNEL_ID),
+    allChannels: client.isReady() && client.guilds.cache.get(GUILD_ID)
+      ? client.guilds.cache.get(GUILD_ID).channels.cache.map(c => ({ id: c.id, name: c.name, type: c.type }))
+      : [],
+  }
+}
+
+module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, triggerReleaseAnnounce, getBotDebug }

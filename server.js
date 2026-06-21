@@ -389,6 +389,11 @@ app.post('/api/admin/bot/announce-release', adminMiddleware, async (req, res) =>
   catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
+app.get('/api/admin/bot/debug', adminMiddleware, (req, res) => {
+  const { getBotDebug } = require('./bot')
+  res.json(getBotDebug())
+})
+
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 app.get("/download", (req, res) => {
   const url = process.env.DOWNLOAD_URL || "https://github.com/DumePaoli/Rust-Server-Manger2/releases/latest/download/RustServerManager.exe"
