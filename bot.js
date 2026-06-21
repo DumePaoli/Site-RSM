@@ -61,11 +61,9 @@ let lastKnownVersion = null
 
 async function checkNewRelease() {
   try {
-    const headers = { 'User-Agent': 'RSM-Bot' }
-    if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
     const { data } = await axios.get(
       'https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest',
-      { headers }
+      { headers: { 'User-Agent': 'RSM-Bot' } }
     )
     if (!data.tag_name) return
     if (lastKnownVersion === null) { lastKnownVersion = data.tag_name; return }
@@ -277,14 +275,11 @@ async function sendEmbed(channelId, { title, description, color, footer, image, 
 }
 
 async function triggerReleaseAnnounce() {
-  const headers = { 'User-Agent': 'RSM-Bot' }
-  if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
-
   let ghData
   try {
     const { data } = await axios.get(
       'https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest',
-      { headers }
+      { headers: { 'User-Agent': 'RSM-Bot' } }
     )
     ghData = data
   } catch(e) {
