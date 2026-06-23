@@ -55,6 +55,8 @@ export const adminBotCloseTicket = (id) => api.delete(`/api/admin/bot/tickets/${
 export const adminBotSendEmbed = (d) => api.post('/api/admin/bot/send-embed', d).then(r => r.data)
 export const adminBotAnnounceRelease = (d) => api.post('/api/admin/bot/announce-release', d).then(r => r.data)
 export const adminBotDebug = () => api.get('/api/admin/bot/debug').then(r => r.data)
+export const adminHwids = () => api.get('/api/admin/hwids').then(r => r.data)
+export const adminResetHwid = (key) => api.post(`/api/admin/hwids/${key}/reset`).then(r => r.data)
 export const adminBotGetWelcomeConfig = () => api.get('/api/admin/bot/welcome-config').then(r => r.data)
 export const adminBotSetWelcomeConfig = (d) => api.post('/api/admin/bot/welcome-config', d).then(r => r.data)
 export const adminBotSendTicketEmbed = (d) => api.post('/api/admin/bot/send-ticket-embed', d).then(r => r.data)

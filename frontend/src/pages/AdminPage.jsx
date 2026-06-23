@@ -4,11 +4,12 @@ import {
   adminCustomers, adminBan, adminUnban,
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
-  adminGenerateLicense, adminManualLicenses
+  adminGenerateLicense, adminManualLicenses,
+  adminHwids, adminResetHwid
 } from '../api/client'
-import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2 } from 'lucide-react'
+import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw } from 'lucide-react'
 
-const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences']
+const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences', 'HWIDs']
 
 function StatusBadge({ status }) {
   const cls = { paid: 'badge-paid', pending: 'badge-pending', failed: 'badge-failed', refunded: 'badge-refunded' }
@@ -37,6 +38,10 @@ export default function AdminPage() {
   const [licErr, setLicErr]         = useState('')
   const [copied, setCopied]         = useState(null)
   const [licDbLoading, setLicDbLoading] = useState(false)
+  const [hwids, setHwids] = useState([])
+  const [hwidsLoading, setHwidsLoading] = useState(false)
+  const [hwidsErr, setHwidsErr] = useState('')
+  const [hwidSearch, setHwidSearch] = useState('')
 
   useEffect(() => {
     if (!authed) return
@@ -47,6 +52,21 @@ export default function AdminPage() {
     adminBlacklist().then(setBlacklist).catch(() => {})
     adminManualLicenses().then(rows => setLicKeys(rows.map(r => ({ key: r.license_key, notes: r.notes, at: new Date(r.created_at).toLocaleString('fr-FR') })))).catch(() => {})
   }, [authed])
+
+  const loadHwids = () => {
+    setHwidsLoading(true); setHwidsErr('')
+    adminHwids().then(setHwids).catch(e => setHwidsErr(e.response?.data?.detail || 'Erreur')).finally(() => setHwidsLoading(false))
+  }
+
+  const resetHwid = async (key) => {
+    if (!confirm(`Réinitialiser le HWID de ${key} ?\nL'utilisateur pourra réactiver sur une nouvelle machine.`)) return
+    try {
+      await adminResetHwid(key)
+      setHwids(h => h.map(x => x.key === key ? { ...x, hwid: null, activations: [] } : x))
+    } catch(e) {
+      alert(e.response?.data?.detail || 'Erreur — l\'endpoint reset-hwid n\'existe peut-être pas sur ce serveur de licences')
+    }
+  }
 
   const doLogin = async (e) => {
     e.preventDefault()
@@ -355,6 +375,57 @@ export default function AdminPage() {
             </form>
           </div>
         )}
+        {/* HWIDs */}
+        {tab === 'HWIDs' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h3 className="font-semibold text-white flex items-center gap-2"><Monitor size={16} className="text-rust-500" /> Licences activées</h3>
+              <button onClick={loadHwids} disabled={hwidsLoading} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                <RefreshCw size={12} className={hwidsLoading ? 'animate-spin' : ''} /> {hwidsLoading ? 'Chargement...' : 'Charger'}
+              </button>
+              {hwids.length > 0 && (
+                <input value={hwidSearch} onChange={e => setHwidSearch(e.target.value)} className="input text-xs py-1.5 px-3 w-64" placeholder="Rechercher clé ou HWID..." />
+              )}
+              {hwids.length > 0 && <span className="text-surface-500 text-xs">{hwids.length} clés</span>}
+            </div>
+            {hwidsErr && <p className="text-red-400 text-sm">{hwidsErr}</p>}
+            {hwids.length === 0 && !hwidsLoading && !hwidsErr && (
+              <p className="text-surface-500 text-sm">Clique sur Charger pour récupérer les données.</p>
+            )}
+            {hwids.filter(h => !hwidSearch || h.key.includes(hwidSearch.toUpperCase()) || (h.hwid || '').includes(hwidSearch)).map(h => (
+              <div key={h.key} className="card px-5 py-4 flex items-start gap-4 flex-wrap">
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-rust-400 text-sm">{h.key}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${h.active ? 'bg-green-500/15 text-green-400' : 'bg-surface-700 text-surface-400'}`}>
+                      {h.active ? 'Active' : 'Inactive'}
+                    </span>
+                    {h.notes && <span className="text-xs text-surface-500">{h.notes}</span>}
+                  </div>
+                  {h.hwid ? (
+                    <p className="font-mono text-xs text-surface-400 break-all">HWID: {h.hwid}</p>
+                  ) : (
+                    <p className="text-xs text-surface-600 italic">Pas encore activée</p>
+                  )}
+                  {Array.isArray(h.activations) && h.activations.length > 0 && (
+                    <div className="space-y-0.5">
+                      {h.activations.map((a, i) => (
+                        <p key={i} className="font-mono text-xs text-surface-500 break-all">Machine {i + 1}: {a.hwid || a}</p>
+                      ))}
+                    </div>
+                  )}
+                  {h.created_at && <p className="text-xs text-surface-600">{new Date(h.created_at).toLocaleString('fr-FR')}</p>}
+                </div>
+                {(h.hwid || (h.activations && h.activations.length > 0)) && (
+                  <button onClick={() => resetHwid(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 flex-shrink-0">
+                    <RotateCcw size={12} /> Reset HWID
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Licences */}
         {tab === 'Licences' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -407,6 +407,40 @@ app.post('/api/admin/bot/announce-release', adminMiddleware, async (req, res) =>
   }
 })
 
+app.get('/api/admin/hwids', adminMiddleware, async (req, res) => {
+  try {
+    const r = await axios.get(
+      `${process.env.LICENSE_SERVER_URL}/admin/keys`,
+      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
+    )
+    const keys = Array.isArray(r.data) ? r.data : (r.data.keys || [])
+    res.json(keys.map(k => ({
+      key: k.key || k.license_key || '',
+      hwid: k.hwid || k.hardware_id || null,
+      activations: k.activations || k.machines || [],
+      active: k.active ?? k.is_active ?? true,
+      notes: k.notes || '',
+      created_at: k.created_at || null,
+    })))
+  } catch(e) {
+    res.status(500).json({ detail: e.response?.data?.message || e.message })
+  }
+})
+
+app.post('/api/admin/hwids/:key/reset', adminMiddleware, async (req, res) => {
+  try {
+    const key = req.params.key
+    await axios.post(
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/reset-hwid`,
+      {},
+      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
+    )
+    res.json({ ok: true })
+  } catch(e) {
+    res.status(e.response?.status || 500).json({ detail: e.response?.data?.message || e.response?.data?.detail || e.message })
+  }
+})
+
 app.get('/api/admin/bot/welcome-config', adminMiddleware, (req, res) => {
   res.json(getWelcomeConfig())
 })
