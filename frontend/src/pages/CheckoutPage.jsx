@@ -78,6 +78,7 @@ export default function CheckoutPage() {
         coupon_code: couponResult ? coupon : '',
         payment_method: 'stripe',
       })
+      if (r.free) { window.location.href = `/success?order=${r.order_id}`; return }
       window.location.href = r.checkout_url
     } catch (e) {
       setError(e.response?.data?.detail || 'Erreur lors du paiement')
