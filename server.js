@@ -428,10 +428,11 @@ app.get('/api/admin/hwids', adminMiddleware, async (req, res) => {
         key: detail.key || detail.license_key || '',
         hwid,
         activations,
+        activation_count: detail.activation_count ?? activations.length ?? null,
         active: detail.active ?? detail.is_active ?? true,
         notes: detail.notes || '',
+        tier: detail.tier || null,
         created_at: detail.created_at || null,
-        _raw: detail,
       }
     }))
     res.json(detailed)

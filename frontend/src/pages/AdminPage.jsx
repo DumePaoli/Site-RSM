@@ -431,24 +431,18 @@ export default function AdminPage() {
                     <span className={`text-xs px-2 py-0.5 rounded-full ${h.active ? 'bg-green-500/15 text-green-400' : 'bg-surface-700 text-surface-400'}`}>
                       {h.active ? 'Active' : 'Inactive'}
                     </span>
+                    {h.tier && <span className="text-xs px-2 py-0.5 rounded-full bg-rust-500/10 text-rust-400">{h.tier}</span>}
                     {h.notes && <span className="text-xs text-surface-500">{h.notes}</span>}
                   </div>
-                  {h.hwid ? (
-                    <p className="font-mono text-xs text-surface-400 break-all">HWID: {h.hwid}</p>
+                  {h.activation_count > 0 ? (
+                    <p className="text-xs text-surface-400">{h.activation_count} machine{h.activation_count > 1 ? 's' : ''} activée{h.activation_count > 1 ? 's' : ''}</p>
                   ) : (
                     <p className="text-xs text-surface-600 italic">Pas encore activée</p>
                   )}
-                  {Array.isArray(h.activations) && h.activations.length > 0 && (
-                    <div className="space-y-0.5">
-                      {h.activations.map((a, i) => (
-                        <p key={i} className="font-mono text-xs text-surface-500 break-all">Machine {i + 1}: {a.hwid || a}</p>
-                      ))}
-                    </div>
-                  )}
-                  {h.created_at && <p className="text-xs text-surface-600">{new Date(h.created_at).toLocaleString('fr-FR')}</p>}
+                  {h.created_at && <p className="text-xs text-surface-600">{new Date(h.created_at * 1000).toLocaleString('fr-FR')}</p>}
                 </div>
                 <div className="flex flex-col gap-2 flex-shrink-0">
-                  {(h.hwid || (h.activations && h.activations.length > 0)) && (
+                  {h.activation_count > 0 && (
                     <button onClick={() => resetHwid(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
                       <RotateCcw size={12} /> Reset HWID
                     </button>
