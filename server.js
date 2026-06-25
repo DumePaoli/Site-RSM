@@ -38,10 +38,10 @@ const adminMiddleware = (req, res, next) => {
 
 const SLUG_MAX_MACHINES = { '1m': 1, '3m': 2, 'lifetime': 4 }
 
-async function generateLicenseKey(notes = '', maxMachines = 2) {
+async function generateLicenseKey(notes = '', maxMachines = 2, tier = 'pro') {
   const r = await axios.post(
     `${process.env.LICENSE_SERVER_URL}/admin/keys`,
-    { count: 1, tier: 'pro', notes, max_machines: maxMachines },
+    { count: 1, tier, notes, max_machines: maxMachines },
     { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
   )
   return r.data.keys[0]
@@ -84,7 +84,7 @@ async function fulfillOrder(orderId) {
   const product = await db.get('SELECT * FROM products WHERE id = ?', [order.product_id])
   const maxMachines = SLUG_MAX_MACHINES[product?.slug] || 2
   let key = ''
-  try { key = await generateLicenseKey(`order#${orderId}`, maxMachines) } catch (e) { console.error('[license]', e.message) }
+  try { key = await generateLicenseKey(`order#${orderId}`, maxMachines, product?.slug || 'pro') } catch (e) { console.error('[license]', e.message) }
   await db.run(`UPDATE orders SET status='paid', license_key=?, paid_at=NOW() WHERE id=?`, [key, orderId])
   if (order.coupon_code) await db.run('UPDATE coupons SET uses = uses + 1 WHERE code = ?', [order.coupon_code])
   const customer = await db.get('SELECT id FROM customers WHERE email = ?', [order.email])
