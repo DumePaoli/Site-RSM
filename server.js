@@ -411,6 +411,18 @@ app.post('/api/admin/bot/announce-release', adminMiddleware, async (req, res) =>
   }
 })
 
+app.get('/api/admin/hwids/raw/:key', adminMiddleware, async (req, res) => {
+  try {
+    const r = await axios.get(
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${req.params.key}`,
+      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
+    )
+    res.json(r.data)
+  } catch(e) {
+    res.status(e.response?.status || 500).json({ detail: e.response?.data || e.message })
+  }
+})
+
 app.get('/api/admin/hwids', adminMiddleware, async (req, res) => {
   try {
     const r = await axios.get(
