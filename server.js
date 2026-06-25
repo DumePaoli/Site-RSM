@@ -441,6 +441,18 @@ app.post('/api/admin/hwids/:key/reset', adminMiddleware, async (req, res) => {
   }
 })
 
+app.delete('/api/admin/keys/:key/activations', adminMiddleware, async (req, res) => {
+  try {
+    await axios.delete(
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${req.params.key}/activations`,
+      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
+    )
+    res.json({ ok: true })
+  } catch(e) {
+    res.status(e.response?.status || 500).json({ detail: e.response?.data?.message || e.response?.data?.detail || e.message })
+  }
+})
+
 app.delete('/api/admin/keys/:key', adminMiddleware, async (req, res) => {
   try {
     const key = req.params.key
