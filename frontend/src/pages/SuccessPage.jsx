@@ -43,7 +43,7 @@ export default function SuccessPage() {
           <Mail size={28} className="text-yellow-400" />
         </div>
         <h1 className="text-2xl font-bold text-white mb-3">Paiement en attente</h1>
-        <p className="text-surface-400 mb-6">Votre commande #{order.id} est en cours de traitement. Vous recevrez votre clé par email dès confirmation.</p>
+        <p className="text-surface-400 mb-6">Votre commande est en cours de traitement. Vous recevrez votre clé par email dès confirmation.</p>
         <Link to="/" className="btn-secondary">Retour à l'accueil</Link>
       </div>
     </div>
@@ -82,7 +82,7 @@ export default function SuccessPage() {
 
         {/* Product */}
         <div className="text-surface-400 text-sm mb-8">
-          Commande <strong className="text-white">#{order.id}</strong> — {order.product_name}
+          {order.product_name}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
