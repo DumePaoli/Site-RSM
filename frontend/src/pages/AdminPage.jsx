@@ -43,14 +43,24 @@ export default function AdminPage() {
   const [hwidsErr, setHwidsErr] = useState('')
   const [hwidSearch, setHwidSearch] = useState('')
 
+  const logout = () => {
+    localStorage.removeItem('rsm_admin')
+    localStorage.removeItem('rsm_token')
+    setAuthed(false)
+  }
+
+  const handleApiError = (e) => {
+    if (e?.response?.status === 401) logout()
+  }
+
   useEffect(() => {
     if (!authed) return
-    adminStats().then(setStats).catch(() => {})
-    adminOrders().then(setOrders).catch(() => {})
-    adminCustomers().then(setCustomers).catch(() => {})
-    adminCoupons().then(setCoupons).catch(() => {})
-    adminBlacklist().then(setBlacklist).catch(() => {})
-    adminManualLicenses().then(rows => setLicKeys(rows.map(r => ({ key: r.license_key, notes: r.notes, at: new Date(r.created_at).toLocaleString('fr-FR') })))).catch(() => {})
+    adminStats().then(setStats).catch(handleApiError)
+    adminOrders().then(setOrders).catch(handleApiError)
+    adminCustomers().then(setCustomers).catch(handleApiError)
+    adminCoupons().then(setCoupons).catch(handleApiError)
+    adminBlacklist().then(setBlacklist).catch(handleApiError)
+    adminManualLicenses().then(rows => setLicKeys(rows.map(r => ({ key: r.license_key, notes: r.notes, at: new Date(r.created_at).toLocaleString('fr-FR') })))).catch(handleApiError)
   }, [authed])
 
   const loadHwids = () => {
@@ -160,6 +170,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-black text-white">Panneau Admin</h1>
+          <button onClick={logout} className="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors">Déconnexion</button>
         </div>
 
         {/* Stats */}
