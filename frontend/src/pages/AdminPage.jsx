@@ -5,7 +5,7 @@ import {
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
   adminGenerateLicense, adminManualLicenses,
-  adminHwids, adminResetHwid, adminRevokeKey
+  adminHwids, adminResetHwid, adminRevokeKey, adminClearActivations
 } from '../api/client'
 import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw } from 'lucide-react'
 
@@ -85,6 +85,16 @@ export default function AdminPage() {
       setHwids(h => h.map(x => x.key === key ? { ...x, active: false } : x))
     } catch(e) {
       alert(e.response?.data?.detail || 'Erreur lors de la révocation')
+    }
+  }
+
+  const clearActivations = async (key) => {
+    if (!confirm(`Effacer toutes les activations de ${key} ?\nL'utilisateur devra réactiver sur ses machines.`)) return
+    try {
+      await adminClearActivations(key)
+      setHwids(h => h.map(x => x.key === key ? { ...x, hwid: null, activations: [] } : x))
+    } catch(e) {
+      alert(e.response?.data?.detail || 'Erreur lors de la suppression des activations')
     }
   }
 
@@ -443,6 +453,9 @@ export default function AdminPage() {
                       <RotateCcw size={12} /> Reset HWID
                     </button>
                   )}
+                  <button onClick={() => clearActivations(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                    <Trash2 size={12} /> Effacer activations
+                  </button>
                   {h.active && (
                     <button onClick={() => revokeKey(h.key)} className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition-colors">
                       <Trash2 size={12} /> Révoquer
