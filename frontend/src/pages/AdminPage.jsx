@@ -5,7 +5,7 @@ import {
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
   adminGenerateLicense, adminManualLicenses,
-  adminHwids, adminResetHwid
+  adminHwids, adminResetHwid, adminRevokeKey
 } from '../api/client'
 import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw } from 'lucide-react'
 
@@ -75,6 +75,16 @@ export default function AdminPage() {
       setHwids(h => h.map(x => x.key === key ? { ...x, hwid: null, activations: [] } : x))
     } catch(e) {
       alert(e.response?.data?.detail || 'Erreur — l\'endpoint reset-hwid n\'existe peut-être pas sur ce serveur de licences')
+    }
+  }
+
+  const revokeKey = async (key) => {
+    if (!confirm(`⚠️ Révoquer définitivement la licence ${key} ?\nL'accès sera coupé immédiatement et ne pourra pas être restauré.`)) return
+    try {
+      await adminRevokeKey(key)
+      setHwids(h => h.map(x => x.key === key ? { ...x, active: false } : x))
+    } catch(e) {
+      alert(e.response?.data?.detail || 'Erreur lors de la révocation')
     }
   }
 
@@ -427,11 +437,18 @@ export default function AdminPage() {
                   )}
                   {h.created_at && <p className="text-xs text-surface-600">{new Date(h.created_at).toLocaleString('fr-FR')}</p>}
                 </div>
-                {(h.hwid || (h.activations && h.activations.length > 0)) && (
-                  <button onClick={() => resetHwid(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 flex-shrink-0">
-                    <RotateCcw size={12} /> Reset HWID
-                  </button>
-                )}
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  {(h.hwid || (h.activations && h.activations.length > 0)) && (
+                    <button onClick={() => resetHwid(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                      <RotateCcw size={12} /> Reset HWID
+                    </button>
+                  )}
+                  {h.active && (
+                    <button onClick={() => revokeKey(h.key)} className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition-colors">
+                      <Trash2 size={12} /> Révoquer
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
