@@ -180,6 +180,10 @@ app.post('/api/checkout/create', authMiddleware, async (req, res) => {
       [product.id, email.toLowerCase(), amount, product.currency, payment_method, usedCoupon, discount, customer.id]
     )
     const orderId = info.insertId
+    if (amount === 0) {
+      await fulfillOrder(orderId)
+      return res.json({ order_id: orderId, free: true })
+    }
     if (payment_method === 'stripe') {
       if (!process.env.STRIPE_SECRET_KEY) return res.status(500).json({ detail: 'Stripe non configuré' })
       const session = await getStripe().checkout.sessions.create({
