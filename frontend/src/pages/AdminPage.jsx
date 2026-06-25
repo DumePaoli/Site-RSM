@@ -5,7 +5,7 @@ import {
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
   adminGenerateLicense, adminManualLicenses,
-  adminHwids, adminResetHwid
+  adminHwids, adminResetHwid, adminRevokeKey, adminClearActivations
 } from '../api/client'
 import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw } from 'lucide-react'
 
@@ -43,14 +43,24 @@ export default function AdminPage() {
   const [hwidsErr, setHwidsErr] = useState('')
   const [hwidSearch, setHwidSearch] = useState('')
 
+  const logout = () => {
+    localStorage.removeItem('rsm_admin')
+    localStorage.removeItem('rsm_token')
+    setAuthed(false)
+  }
+
+  const handleApiError = (e) => {
+    if (e?.response?.status === 401) logout()
+  }
+
   useEffect(() => {
     if (!authed) return
-    adminStats().then(setStats).catch(() => {})
-    adminOrders().then(setOrders).catch(() => {})
-    adminCustomers().then(setCustomers).catch(() => {})
-    adminCoupons().then(setCoupons).catch(() => {})
-    adminBlacklist().then(setBlacklist).catch(() => {})
-    adminManualLicenses().then(rows => setLicKeys(rows.map(r => ({ key: r.license_key, notes: r.notes, at: new Date(r.created_at).toLocaleString('fr-FR') })))).catch(() => {})
+    adminStats().then(setStats).catch(handleApiError)
+    adminOrders().then(setOrders).catch(handleApiError)
+    adminCustomers().then(setCustomers).catch(handleApiError)
+    adminCoupons().then(setCoupons).catch(handleApiError)
+    adminBlacklist().then(setBlacklist).catch(handleApiError)
+    adminManualLicenses().then(rows => setLicKeys(rows.map(r => ({ key: r.license_key, notes: r.notes, at: new Date(r.created_at).toLocaleString('fr-FR') })))).catch(handleApiError)
   }, [authed])
 
   const loadHwids = () => {
@@ -65,6 +75,26 @@ export default function AdminPage() {
       setHwids(h => h.map(x => x.key === key ? { ...x, hwid: null, activations: [] } : x))
     } catch(e) {
       alert(e.response?.data?.detail || 'Erreur — l\'endpoint reset-hwid n\'existe peut-être pas sur ce serveur de licences')
+    }
+  }
+
+  const revokeKey = async (key) => {
+    if (!confirm(`⚠️ Révoquer définitivement la licence ${key} ?\nL'accès sera coupé immédiatement et ne pourra pas être restauré.`)) return
+    try {
+      await adminRevokeKey(key)
+      setHwids(h => h.map(x => x.key === key ? { ...x, active: false } : x))
+    } catch(e) {
+      alert(e.response?.data?.detail || 'Erreur lors de la révocation')
+    }
+  }
+
+  const clearActivations = async (key) => {
+    if (!confirm(`Effacer toutes les activations de ${key} ?\nL'utilisateur devra réactiver sur ses machines.`)) return
+    try {
+      await adminClearActivations(key)
+      setHwids(h => h.map(x => x.key === key ? { ...x, hwid: null, activations: [] } : x))
+    } catch(e) {
+      alert(e.response?.data?.detail || 'Erreur lors de la suppression des activations')
     }
   }
 
@@ -160,6 +190,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-black text-white">Panneau Admin</h1>
+          <button onClick={logout} className="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors">Déconnexion</button>
         </div>
 
         {/* Stats */}
@@ -416,11 +447,21 @@ export default function AdminPage() {
                   )}
                   {h.created_at && <p className="text-xs text-surface-600">{new Date(h.created_at).toLocaleString('fr-FR')}</p>}
                 </div>
-                {(h.hwid || (h.activations && h.activations.length > 0)) && (
-                  <button onClick={() => resetHwid(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 flex-shrink-0">
-                    <RotateCcw size={12} /> Reset HWID
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  {(h.hwid || (h.activations && h.activations.length > 0)) && (
+                    <button onClick={() => resetHwid(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                      <RotateCcw size={12} /> Reset HWID
+                    </button>
+                  )}
+                  <button onClick={() => clearActivations(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                    <Trash2 size={12} /> Effacer activations
                   </button>
-                )}
+                  {h.active && (
+                    <button onClick={() => revokeKey(h.key)} className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition-colors">
+                      <Trash2 size={12} /> Révoquer
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
