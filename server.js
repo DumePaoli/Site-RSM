@@ -411,33 +411,30 @@ app.post('/api/admin/bot/announce-release', adminMiddleware, async (req, res) =>
   }
 })
 
-app.get('/api/admin/hwids/raw/:key', adminMiddleware, async (req, res) => {
-  try {
-    const r = await axios.get(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys/${req.params.key}`,
-      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
-    )
-    res.json(r.data)
-  } catch(e) {
-    res.status(e.response?.status || 500).json({ detail: e.response?.data || e.message })
-  }
-})
-
 app.get('/api/admin/hwids', adminMiddleware, async (req, res) => {
   try {
-    const r = await axios.get(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys`,
-      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
-    )
+    const headers = { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }
+    const r = await axios.get(`${process.env.LICENSE_SERVER_URL}/admin/keys`, { headers, timeout: 15000 })
     const keys = Array.isArray(r.data) ? r.data : (r.data.keys || [])
-    res.json(keys.map(k => ({
-      key: k.key || k.license_key || '',
-      hwid: k.hwid || k.hardware_id || null,
-      activations: k.activations || k.machines || [],
-      active: k.active ?? k.is_active ?? true,
-      notes: k.notes || '',
-      created_at: k.created_at || null,
-    })))
+    const detailed = await Promise.all(keys.map(async k => {
+      let detail = k
+      try {
+        const dr = await axios.get(`${process.env.LICENSE_SERVER_URL}/admin/keys/${k.key || k.license_key}`, { headers, timeout: 10000 })
+        detail = { ...k, ...dr.data }
+      } catch {}
+      const hwid = detail.hwid || detail.hardware_id || detail.machine_id || null
+      const activations = detail.activations || detail.machines || detail.hwids || []
+      return {
+        key: detail.key || detail.license_key || '',
+        hwid,
+        activations,
+        active: detail.active ?? detail.is_active ?? true,
+        notes: detail.notes || '',
+        created_at: detail.created_at || null,
+        _raw: detail,
+      }
+    }))
+    res.json(detailed)
   } catch(e) {
     res.status(500).json({ detail: e.response?.data?.message || e.message })
   }
