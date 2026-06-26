@@ -128,14 +128,23 @@ app.post('/api/admin/login', (req, res) => {
 
 // ── Products
 let _versionCache = { value: process.env.APP_VERSION || 'v1.1.52', at: 0 }
+async function fetchLatestVersion() {
+  const r = await axios.get('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest', { headers: { 'User-Agent': 'RSM-Site' } })
+  if (r.data.tag_name) _versionCache = { value: r.data.tag_name, at: Date.now() }
+}
+
 app.get('/api/version', async (req, res) => {
-  const TTL = 3600_000
+  const TTL = 300_000 // 5 minutes
   if (Date.now() - _versionCache.at < TTL) return res.json({ version: _versionCache.value })
-  try {
-    const r = await axios.get('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest', { headers: { 'User-Agent': 'RSM-Site' } })
-    if (r.data.tag_name) _versionCache = { value: r.data.tag_name, at: Date.now() }
-  } catch {}
+  try { await fetchLatestVersion() } catch {}
   res.json({ version: _versionCache.value })
+})
+
+app.post('/api/admin/refresh-version', adminMiddleware, async (req, res) => {
+  try {
+    await fetchLatestVersion()
+    res.json({ version: _versionCache.value })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
 app.get('/api/products', async (req, res) => {
