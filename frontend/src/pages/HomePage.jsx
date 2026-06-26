@@ -111,7 +111,7 @@ export default function HomePage() {
   const { lang } = useLang()
   const [products, setProducts] = useState([])
   const [activeFeature, setActiveFeature] = useState(0)
-  const [version, setVersion] = useState('v1.1.24')
+  const [version, setVersion] = useState('v1.1.52')
   const [lightbox, setLightbox] = useState(null)
 
   useEffect(() => {

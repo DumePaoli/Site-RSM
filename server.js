@@ -127,7 +127,7 @@ app.post('/api/admin/login', (req, res) => {
 })
 
 // ── Products
-let _versionCache = { value: process.env.APP_VERSION || 'v1.1.30', at: 0 }
+let _versionCache = { value: process.env.APP_VERSION || 'v1.1.52', at: 0 }
 app.get('/api/version', async (req, res) => {
   const TTL = 3600_000
   if (Date.now() - _versionCache.at < TTL) return res.json({ version: _versionCache.value })
