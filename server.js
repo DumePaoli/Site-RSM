@@ -438,12 +438,18 @@ app.get('/api/admin/hwids', adminMiddleware, async (req, res) => {
   }
 })
 
+async function deleteAllActivations(key) {
+  const headers = { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }
+  const r = await axios.get(`${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/activations`, { headers, timeout: 10000 })
+  const list = r.data || []
+  await Promise.all(list.map(a =>
+    axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/activations/${encodeURIComponent(a.hwid)}`, { headers, timeout: 10000 })
+  ))
+}
+
 app.post('/api/admin/hwids/:key/reset', adminMiddleware, async (req, res) => {
   try {
-    await axios.delete(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys/${req.params.key}/activations`,
-      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
-    )
+    await deleteAllActivations(req.params.key)
     res.json({ ok: true })
   } catch(e) {
     res.status(e.response?.status || 500).json({ detail: e.response?.data?.message || e.response?.data?.detail || e.message })
@@ -452,10 +458,7 @@ app.post('/api/admin/hwids/:key/reset', adminMiddleware, async (req, res) => {
 
 app.delete('/api/admin/keys/:key/activations', adminMiddleware, async (req, res) => {
   try {
-    await axios.delete(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys/${req.params.key}/activations`,
-      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
-    )
+    await deleteAllActivations(req.params.key)
     res.json({ ok: true })
   } catch(e) {
     res.status(e.response?.status || 500).json({ detail: e.response?.data?.message || e.response?.data?.detail || e.message })
