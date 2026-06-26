@@ -13,6 +13,20 @@ import {
 import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw, Bot, Hash, Shield, Ticket, Send, Megaphone, X } from 'lucide-react'
 
 const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences', 'HWIDs', 'Bot']
+const LIC_DURATIONS = [
+  { value: '0',      label: 'Lifetime (pas d\'expiration)' },
+  { value: '5',      label: '5 minutes' },
+  { value: '10',     label: '10 minutes' },
+  { value: '30',     label: '30 minutes' },
+  { value: '60',     label: '1 heure' },
+  { value: '360',    label: '6 heures' },
+  { value: '86400',  label: '1 jour' },
+  { value: '259200', label: '3 jours' },
+  { value: '604800', label: '7 jours' },
+  { value: '1209600',label: '14 jours' },
+  { value: '2592000',label: '30 jours' },
+  { value: '7776000',label: '90 jours' },
+]
 const BOT_TABS = ['Stats', 'Embed', 'Ticket Embed', 'Tickets', 'Bienvenue', 'Release']
 const PRESET_COLORS = [
   { label: 'Rouge RSM', value: '#c12814' },
@@ -223,9 +237,9 @@ export default function AdminPage() {
     setLicErr('')
     setLicLoading(true)
     try {
+      const selected = LIC_DURATIONS.find(d => d.value === licDuration)
       const r = await adminGenerateLicense(licNotes, parseInt(licDuration))
-      const durationLabel = licDuration === '0' ? 'lifetime' : licDuration === '1' ? '1 jour' : `${licDuration} jours`
-      setLicKeys(keys => [{ key: r.key, notes: licNotes, duration: durationLabel, at: new Date().toLocaleString('fr-FR') }, ...keys])
+      setLicKeys(keys => [{ key: r.key, notes: licNotes, duration: selected?.label, at: new Date().toLocaleString('fr-FR') }, ...keys])
       setLicNotes(''); setLicDuration('0')
     } catch (err) {
       setLicErr(err.response?.data?.detail || 'Erreur génération')
@@ -615,13 +629,7 @@ export default function AdminPage() {
               <div>
                 <label className="label">Durée</label>
                 <select className="input" value={licDuration} onChange={e => setLicDuration(e.target.value)}>
-                  <option value="0">Lifetime (pas d'expiration)</option>
-                  <option value="1">1 jour</option>
-                  <option value="3">3 jours</option>
-                  <option value="7">7 jours</option>
-                  <option value="14">14 jours</option>
-                  <option value="30">30 jours</option>
-                  <option value="90">90 jours</option>
+                  {LIC_DURATIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </select>
               </div>
               {licErr && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">{licErr}</p>}
