@@ -45,6 +45,7 @@ export default function AdminPage() {
   const [blEmail, setBlEmail]       = useState('')
   const [blReason, setBlReason]     = useState('')
   const [licNotes, setLicNotes]     = useState('')
+  const [licDuration, setLicDuration] = useState('0')
   const [licKeys, setLicKeys]       = useState([])
   const [licLoading, setLicLoading] = useState(false)
   const [licErr, setLicErr]         = useState('')
@@ -222,9 +223,10 @@ export default function AdminPage() {
     setLicErr('')
     setLicLoading(true)
     try {
-      const r = await adminGenerateLicense(licNotes)
-      setLicKeys(keys => [{ key: r.key, notes: licNotes, at: new Date().toLocaleString('fr-FR') }, ...keys])
-      setLicNotes('')
+      const r = await adminGenerateLicense(licNotes, parseInt(licDuration))
+      const durationLabel = licDuration === '0' ? 'lifetime' : licDuration === '1' ? '1 jour' : `${licDuration} jours`
+      setLicKeys(keys => [{ key: r.key, notes: licNotes, duration: durationLabel, at: new Date().toLocaleString('fr-FR') }, ...keys])
+      setLicNotes(''); setLicDuration('0')
     } catch (err) {
       setLicErr(err.response?.data?.detail || 'Erreur génération')
     } finally { setLicLoading(false) }
@@ -595,6 +597,7 @@ export default function AdminPage() {
                   <div className="min-w-0">
                     <div className="font-mono text-rust-400 text-sm truncate">{l.key}</div>
                     {l.notes && <div className="text-surface-400 text-xs mt-0.5">{l.notes}</div>}
+                    {l.duration && <div className="text-rust-400/70 text-xs mt-0.5">⏱ {l.duration}</div>}
                     <div className="text-surface-500 text-xs">{l.at}</div>
                   </div>
                   <button onClick={() => copyKey(l.key)} className="btn-secondary text-xs py-1.5 px-3 flex-shrink-0 flex items-center gap-1">
@@ -608,6 +611,18 @@ export default function AdminPage() {
               <div>
                 <label className="label">Notes (optionnel)</label>
                 <input className="input" placeholder="cadeau, test, influenceur…" value={licNotes} onChange={e => setLicNotes(e.target.value)} />
+              </div>
+              <div>
+                <label className="label">Durée</label>
+                <select className="input" value={licDuration} onChange={e => setLicDuration(e.target.value)}>
+                  <option value="0">Lifetime (pas d'expiration)</option>
+                  <option value="1">1 jour</option>
+                  <option value="3">3 jours</option>
+                  <option value="7">7 jours</option>
+                  <option value="14">14 jours</option>
+                  <option value="30">30 jours</option>
+                  <option value="90">90 jours</option>
+                </select>
               </div>
               {licErr && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">{licErr}</p>}
               <button type="submit" disabled={licLoading} className="btn-primary w-full justify-center disabled:opacity-50">
