@@ -451,10 +451,7 @@ export default function AdminPage() {
                       <RotateCcw size={12} /> Reset HWID
                     </button>
                   )}
-                  <button onClick={() => clearActivations(h.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
-                    <Trash2 size={12} /> Effacer activations
-                  </button>
-                  {h.active && (
+{h.active && (
                     <button onClick={() => revokeKey(h.key)} className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition-colors">
                       <Trash2 size={12} /> Révoquer
                     </button>
