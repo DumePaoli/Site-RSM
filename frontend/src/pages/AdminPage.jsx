@@ -434,8 +434,12 @@ export default function AdminPage() {
                     {h.tier && <span className="text-xs px-2 py-0.5 rounded-full bg-rust-500/10 text-rust-400">{h.tier}</span>}
                     {h.notes && <span className="text-xs text-surface-500">{h.notes}</span>}
                   </div>
-                  {h.activation_count > 0 ? (
-                    <p className="text-xs text-surface-400">{h.activation_count} machine{h.activation_count > 1 ? 's' : ''} activée{h.activation_count > 1 ? 's' : ''}</p>
+                  {h.activations && h.activations.length > 0 ? (
+                    <div className="space-y-0.5 mt-1">
+                      {h.activations.map((a, i) => (
+                        <p key={i} className="font-mono text-xs text-surface-400 break-all">Machine {i + 1}: {a.hwid}</p>
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-xs text-surface-600 italic">Pas encore activée</p>
                   )}

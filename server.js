@@ -417,22 +417,19 @@ app.get('/api/admin/hwids', adminMiddleware, async (req, res) => {
     const r = await axios.get(`${process.env.LICENSE_SERVER_URL}/admin/keys`, { headers, timeout: 15000 })
     const keys = Array.isArray(r.data) ? r.data : (r.data.keys || [])
     const detailed = await Promise.all(keys.map(async k => {
-      let detail = k
+      let activations = []
       try {
-        const dr = await axios.get(`${process.env.LICENSE_SERVER_URL}/admin/keys/${k.key || k.license_key}`, { headers, timeout: 10000 })
-        detail = { ...k, ...dr.data }
+        const ar = await axios.get(`${process.env.LICENSE_SERVER_URL}/admin/keys/${k.key}/activations`, { headers, timeout: 10000 })
+        activations = ar.data || []
       } catch {}
-      const hwid = detail.hwid || detail.hardware_id || detail.machine_id || null
-      const activations = detail.activations || detail.machines || detail.hwids || []
       return {
-        key: detail.key || detail.license_key || '',
-        hwid,
+        key: k.key,
         activations,
-        activation_count: detail.activation_count ?? activations.length ?? null,
-        active: detail.active ?? detail.is_active ?? true,
-        notes: detail.notes || '',
-        tier: detail.tier || null,
-        created_at: detail.created_at || null,
+        activation_count: k.activation_count ?? activations.length,
+        active: k.active ?? true,
+        notes: k.notes || '',
+        tier: k.tier || null,
+        created_at: k.created_at || null,
       }
     }))
     res.json(detailed)
