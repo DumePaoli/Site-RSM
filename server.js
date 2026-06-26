@@ -453,6 +453,7 @@ app.get('/api/admin/hwids', adminMiddleware, async (req, res) => {
         notes: k.notes || '',
         tier: k.tier || null,
         created_at: k.created_at || null,
+        expires_at: k.expires_at || null,
       }
     }))
     res.json(detailed)
