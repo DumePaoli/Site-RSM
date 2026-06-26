@@ -37,6 +37,7 @@ export const adminLogin = (p) => api.post('/api/admin/login', { password: p }).t
 export const adminStats = () => api.get('/api/admin/stats').then(r => r.data)
 export const adminOrders = (page = 1) => api.get(`/api/admin/orders?page=${page}`).then(r => r.data)
 export const adminRefund = (id) => api.post(`/api/admin/orders/${id}/refund`).then(r => r.data)
+export const adminDeleteOrder = (id) => api.delete(`/api/admin/orders/${id}`).then(r => r.data)
 export const adminCustomers = () => api.get('/api/admin/customers').then(r => r.data)
 export const adminBan = (id) => api.post(`/api/admin/customers/${id}/ban`).then(r => r.data)
 export const adminUnban = (id) => api.post(`/api/admin/customers/${id}/unban`).then(r => r.data)
