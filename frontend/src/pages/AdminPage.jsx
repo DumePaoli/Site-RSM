@@ -14,18 +14,18 @@ import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, User
 
 const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences', 'HWIDs', 'Bot']
 const LIC_DURATIONS = [
-  { value: '0',      label: 'Lifetime (pas d\'expiration)' },
-  { value: '5',      label: '5 minutes' },
-  { value: '10',     label: '10 minutes' },
-  { value: '30',     label: '30 minutes' },
-  { value: '60',     label: '1 heure' },
-  { value: '360',    label: '6 heures' },
-  { value: '86400',  label: '1 jour' },
-  { value: '259200', label: '3 jours' },
-  { value: '604800', label: '7 jours' },
-  { value: '1209600',label: '14 jours' },
-  { value: '2592000',label: '30 jours' },
-  { value: '7776000',label: '90 jours' },
+  { value: '0',       label: 'Lifetime (pas d\'expiration)' },
+  { value: '300',     label: '5 minutes' },
+  { value: '600',     label: '10 minutes' },
+  { value: '1800',    label: '30 minutes' },
+  { value: '3600',    label: '1 heure' },
+  { value: '21600',   label: '6 heures' },
+  { value: '86400',   label: '1 jour' },
+  { value: '259200',  label: '3 jours' },
+  { value: '604800',  label: '7 jours' },
+  { value: '1209600', label: '14 jours' },
+  { value: '2592000', label: '30 jours' },
+  { value: '7776000', label: '90 jours' },
 ]
 const BOT_TABS = ['Stats', 'Embed', 'Ticket Embed', 'Tickets', 'Bienvenue', 'Release']
 const PRESET_COLORS = [
