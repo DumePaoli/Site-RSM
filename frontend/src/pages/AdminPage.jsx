@@ -4,7 +4,7 @@ import {
   adminCustomers, adminBan, adminUnban,
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
-  adminGenerateLicense, adminManualLicenses, adminDeleteManualLicense,
+  adminGenerateLicense, adminManualLicenses, adminDeleteManualLicense, adminDeleteOrder,
   adminHwids, adminResetHwid, adminRevokeKey, adminClearActivations, adminRefreshVersion,
   adminBotStats, adminBotChannels, adminBotTickets,
   adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease,
@@ -383,11 +383,16 @@ export default function AdminPage() {
                     <td className="py-3 pr-4 font-mono text-xs text-surface-400">{o.license_key || '—'}</td>
                     <td className="py-3 pr-4 text-surface-400">{new Date(o.created_at).toLocaleDateString('fr-FR')}</td>
                     <td className="py-3">
-                      {o.status === 'paid' && (
-                        <button onClick={() => refund(o.id)} className="btn-danger">
-                          <RefreshCw size={12} /> Remboursement
+                      <div className="flex items-center gap-2">
+                        {o.status === 'paid' && (
+                          <button onClick={() => refund(o.id)} className="btn-danger">
+                            <RefreshCw size={12} /> Remboursement
+                          </button>
+                        )}
+                        <button onClick={async () => { if (!confirm(`Supprimer la commande #${o.id} ?`)) return; await adminDeleteOrder(o.id); setOrders(prev => prev.filter(x => x.id !== o.id)) }} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1 text-red-400 hover:text-red-300 border-red-500/20 hover:border-red-500/40">
+                          <Trash2 size={12} /> Supprimer
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
