@@ -443,10 +443,8 @@ app.get('/api/admin/hwids', adminMiddleware, async (req, res) => {
 
 app.post('/api/admin/hwids/:key/reset', adminMiddleware, async (req, res) => {
   try {
-    const key = req.params.key
-    await axios.post(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/reset-hwid`,
-      {},
+    await axios.delete(
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${req.params.key}/activations`,
       { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
     )
     res.json({ ok: true })
