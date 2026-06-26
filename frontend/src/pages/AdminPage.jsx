@@ -582,6 +582,15 @@ export default function AdminPage() {
                     <p className="text-xs text-surface-600 italic">Pas encore activée</p>
                   )}
                   {h.created_at && <p className="text-xs text-surface-600">{new Date(h.created_at * 1000).toLocaleString('fr-FR')}</p>}
+                  {h.expires_at && (() => {
+                    const remaining = h.expires_at - Math.floor(Date.now() / 1000)
+                    if (remaining <= 0) return <p className="text-xs text-red-400 font-medium">⏱ Expirée</p>
+                    const d = Math.floor(remaining / 86400)
+                    const h2 = Math.floor((remaining % 86400) / 3600)
+                    const m = Math.floor((remaining % 3600) / 60)
+                    const label = d > 0 ? `${d}j ${h2}h` : h2 > 0 ? `${h2}h ${m}min` : `${m}min`
+                    return <p className="text-xs text-yellow-400 font-medium">⏱ Expire dans {label}</p>
+                  })()}
                 </div>
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   {h.activation_count > 0 && (
@@ -592,6 +601,11 @@ export default function AdminPage() {
                   {h.active && (
                     <button onClick={() => revokeKey(h.key)} className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition-colors">
                       <Trash2 size={12} /> Révoquer
+                    </button>
+                  )}
+                  {!h.active && (
+                    <button onClick={async () => { await adminRevokeKey(h.key).catch(() => {}); setHwids(prev => prev.filter(x => x.key !== h.key)) }} className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-surface-700 hover:bg-surface-600 text-surface-400 border border-surface-600 rounded-lg transition-colors">
+                      <Trash2 size={12} /> Supprimer
                     </button>
                   )}
                 </div>
