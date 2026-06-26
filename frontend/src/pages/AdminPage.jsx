@@ -4,7 +4,7 @@ import {
   adminCustomers, adminBan, adminUnban,
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
-  adminGenerateLicense, adminManualLicenses,
+  adminGenerateLicense, adminManualLicenses, adminDeleteManualLicense,
   adminHwids, adminResetHwid, adminRevokeKey, adminClearActivations, adminRefreshVersion,
   adminBotStats, adminBotChannels, adminBotTickets,
   adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease,
@@ -614,9 +614,14 @@ export default function AdminPage() {
                     {l.duration && <div className="text-rust-400/70 text-xs mt-0.5">⏱ {l.duration}</div>}
                     <div className="text-surface-500 text-xs">{l.at}</div>
                   </div>
-                  <button onClick={() => copyKey(l.key)} className="btn-secondary text-xs py-1.5 px-3 flex-shrink-0 flex items-center gap-1">
-                    {copied === l.key ? <><CheckCircle2 size={12} className="text-green-400" /> Copié</> : <><Copy size={12} /> Copier</>}
-                  </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => copyKey(l.key)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1">
+                      {copied === l.key ? <><CheckCircle2 size={12} className="text-green-400" /> Copié</> : <><Copy size={12} /> Copier</>}
+                    </button>
+                    <button onClick={async () => { await adminDeleteManualLicense(l.key); setLicKeys(keys => keys.filter(k => k.key !== l.key)) }} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1 text-red-400 hover:text-red-300 border-red-500/20 hover:border-red-500/40">
+                      <Trash2 size={12} /> Supprimer
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

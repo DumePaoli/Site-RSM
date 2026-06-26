@@ -367,6 +367,18 @@ app.get('/api/admin/manual-licenses', adminMiddleware, async (req, res) => {
   catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
+app.delete('/api/admin/manual-licenses/:key', adminMiddleware, async (req, res) => {
+  try {
+    const key = req.params.key
+    await axios.delete(
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}`,
+      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
+    ).catch(() => {})
+    await db.run('DELETE FROM manual_licenses WHERE license_key=?', [key])
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
 // ── Bot control routes ──────────────────────────────────────────────────────
 app.get('/api/admin/bot/stats', adminMiddleware, (req, res) => {
   try { res.json(getBotStats()) }
