@@ -5,7 +5,7 @@ import {
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
   adminGenerateLicense, adminManualLicenses,
-  adminHwids, adminResetHwid, adminRevokeKey, adminClearActivations
+  adminHwids, adminResetHwid, adminRevokeKey, adminClearActivations, adminRefreshVersion
 } from '../api/client'
 import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw } from 'lucide-react'
 
@@ -190,6 +190,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-black text-white">Panneau Admin</h1>
+          <button onClick={async () => { const r = await adminRefreshVersion(); alert(`Version mise à jour : ${r.version}`) }} className="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"><RefreshCw size={13} /> Sync version</button>
           <button onClick={logout} className="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors">Déconnexion</button>
         </div>
 
