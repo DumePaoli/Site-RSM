@@ -46,7 +46,7 @@ export const adminDeleteCoupon = (id) => api.delete(`/api/admin/coupons/${id}`).
 export const adminBlacklist = () => api.get('/api/admin/blacklist').then(r => r.data)
 export const adminAddBlacklist = (d) => api.post('/api/admin/blacklist', d).then(r => r.data)
 export const adminRemoveBlacklist = (id) => api.delete(`/api/admin/blacklist/${id}`).then(r => r.data)
-export const adminGenerateLicense = (notes, expires_in_days = 0) => api.post('/api/admin/generate-license', { notes, expires_in_days }).then(r => r.data)
+export const adminGenerateLicense = (notes, expires_in_seconds = 0) => api.post('/api/admin/generate-license', { notes, expires_in_seconds }).then(r => r.data)
 export const adminManualLicenses = () => api.get('/api/admin/manual-licenses').then(r => r.data)
 export const adminBotStats = () => api.get('/api/admin/bot/stats').then(r => r.data)
 export const adminBotChannels = () => api.get('/api/admin/bot/channels').then(r => r.data)

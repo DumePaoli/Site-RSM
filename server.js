@@ -38,9 +38,9 @@ const adminMiddleware = (req, res, next) => {
 
 const SLUG_MAX_MACHINES = { '1m': 1, '3m': 2, 'lifetime': 4 }
 
-async function generateLicenseKey(notes = '', maxMachines = 2, tier = 'pro', expiresInDays = 0) {
+async function generateLicenseKey(notes = '', maxMachines = 2, tier = 'pro', expiresInSeconds = 0) {
   const body = { count: 1, tier, notes, max_machines: maxMachines }
-  if (expiresInDays > 0) body.expires_at = Math.floor(Date.now() / 1000) + expiresInDays * 86400
+  if (expiresInSeconds > 0) body.expires_at = Math.floor(Date.now() / 1000) + expiresInSeconds
   const r = await axios.post(
     `${process.env.LICENSE_SERVER_URL}/admin/keys`,
     body,
@@ -355,8 +355,8 @@ app.delete('/api/admin/blacklist/:id', adminMiddleware, async (req, res) => {
 
 app.post('/api/admin/generate-license', adminMiddleware, async (req, res) => {
   try {
-    const { notes = '', expires_in_days = 0 } = req.body
-    const key = await generateLicenseKey(notes || 'admin-manual', 2, 'pro', expires_in_days)
+    const { notes = '', expires_in_seconds = 0 } = req.body
+    const key = await generateLicenseKey(notes || 'admin-manual', 2, 'pro', expires_in_seconds)
     await db.run('INSERT INTO manual_licenses (license_key, notes) VALUES (?,?)', [key, notes])
     res.json({ key })
   } catch(e) { res.status(500).json({ detail: e.message }) }
