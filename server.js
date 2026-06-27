@@ -197,7 +197,7 @@ app.post('/api/admin/login', (req, res) => {
 // ── Products
 let _versionCache = { value: process.env.APP_VERSION || 'v1.1.52', at: 0 }
 async function fetchLatestVersion() {
-  const r = await axios.get('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases/latest', { headers: { 'User-Agent': 'RSM-Site' } })
+  const r = await axios.get('https://api.github.com/repos/DumePaoli/RSM-Releases/releases/latest', { headers: { 'User-Agent': 'RSM-Site' } })
   if (r.data.tag_name) _versionCache = { value: r.data.tag_name, at: Date.now() }
 }
 
@@ -557,7 +557,7 @@ app.get('/api/admin/logs', adminMiddleware, async (req, res) => {
 
 app.get('/api/releases', async (req, res) => {
   try {
-    const r = await axios.get('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases', { headers: { 'User-Agent': 'RSM-Site' }, timeout: 8000 })
+    const r = await axios.get('https://api.github.com/repos/DumePaoli/RSM-Releases/releases', { headers: { 'User-Agent': 'RSM-Site' }, timeout: 8000 })
     res.json(r.data.slice(0, 10).map(rel => ({ tag: rel.tag_name, name: rel.name || rel.tag_name, body: rel.body || '', published_at: rel.published_at, url: rel.html_url })))
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -620,7 +620,7 @@ app.post('/api/admin/bot/announce-release', adminMiddleware, async (req, res) =>
     await triggerReleaseAnnounce({
       tag_name,
       body: body || '',
-      html_url: html_url || `https://github.com/DumePaoli/Rust-Server-Manger2/releases/tag/${tag_name}`,
+      html_url: html_url || `https://github.com/DumePaoli/RSM-Releases/releases/tag/${tag_name}`,
       published_at: published_at || new Date().toISOString()
     })
     res.json({ ok: true })
@@ -730,7 +730,7 @@ app.get('/api/admin/bot/debug', adminMiddleware, (req, res) => {
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 app.get("/download", (req, res) => {
-  const url = process.env.DOWNLOAD_URL || "https://github.com/DumePaoli/Rust-Server-Manger2/releases/latest/download/Rust.Server.Manager.Pro.exe"
+  const url = process.env.DOWNLOAD_URL || "https://github.com/DumePaoli/RSM-Releases/releases/latest/download/Rust.Server.Manager.Pro.exe"
   res.redirect(302, url)
 })
 
