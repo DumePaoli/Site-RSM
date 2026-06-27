@@ -459,6 +459,16 @@ app.delete('/api/admin/orders/:id', adminMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
+app.delete('/api/admin/orders/:id', adminMiddleware, async (req, res) => {
+  try {
+    const o = await db.get('SELECT * FROM orders WHERE id = ?', [req.params.id])
+    if (!o) return res.status(404).json({ detail: 'Introuvable' })
+    if (o.license_key) await axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${o.license_key}`, { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET } }).catch(() => {})
+    await db.run('DELETE FROM orders WHERE id = ?', [o.id])
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
 app.get('/api/admin/customers', adminMiddleware, async (req, res) => {
   try { res.json(await db.all('SELECT id, email, name, banned, created_at FROM customers ORDER BY created_at DESC')) }
   catch(e) { res.status(500).json({ detail: e.message }) }
