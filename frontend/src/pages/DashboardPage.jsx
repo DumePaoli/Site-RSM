@@ -139,15 +139,15 @@ export default function DashboardPage() {
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <a
-                          href="/download"
-                          className="btn-secondary text-xs py-2 px-3"
-                        >
+                        <a href="/download" className="btn-secondary text-xs py-2 px-3">
                           <Download size={13} /> Télécharger
                         </a>
                         <button onClick={() => resend(o.id)} className="btn-secondary text-xs py-2 px-3">
                           <RefreshCw size={13} /> {resent === o.id ? 'Email envoyé !' : 'Renvoyer par email'}
                         </button>
+                        <Link to="/checkout" className="btn-primary text-xs py-2 px-3">
+                          Renouveler
+                        </Link>
                       </div>
                     </div>
                   )}

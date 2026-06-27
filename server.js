@@ -5,6 +5,7 @@ const path       = require('path')
 const cors       = require('cors')
 const bcrypt     = require('bcryptjs')
 const jwt        = require('jsonwebtoken')
+const rateLimit  = require('express-rate-limit')
 let _stripe = null
 const getStripe = () => { if (!_stripe && process.env.STRIPE_SECRET_KEY) _stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); return _stripe }
 const nodemailer = require('nodemailer')
@@ -88,6 +89,16 @@ async function notifyDiscord(msg) {
   axios.post(process.env.DISCORD_WEBHOOK_URL, { content: msg }).catch(() => {})
 }
 
+// Rate limiters
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  handler: (req, res) => {
+    notifyDiscord(`🚨 **Brute force détecté** sur /api/auth/login\nIP: \`${req.ip}\`\nEmail tenté: \`${req.body?.email || '?'}\``)
+    res.status(429).json({ detail: 'Trop de tentatives, réessaie dans 15 minutes.' })
+  }
+})
+const checkoutLimiter = rateLimit({ windowMs: 60 * 1000, max: 5, message: { detail: 'Trop de requêtes, réessaie dans une minute.' } })
+
 async function fulfillOrder(orderId) {
   const order = await db.get('SELECT * FROM orders WHERE id = ?', [orderId])
   if (!order || order.status === 'paid') return
@@ -119,7 +130,7 @@ app.post('/api/auth/register', async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body
     const c = await db.get('SELECT * FROM customers WHERE email = ?', [email?.toLowerCase()])
@@ -175,7 +186,7 @@ app.post('/api/coupons/check', async (req, res) => {
 })
 
 // ── Checkout
-app.post('/api/checkout/create', authMiddleware, async (req, res) => {
+app.post('/api/checkout/create', checkoutLimiter, authMiddleware, async (req, res) => {
   try {
     const { product_slug, coupon_code = '', payment_method = 'stripe' } = req.body
     const customer = await db.get('SELECT * FROM customers WHERE id = ?', [req.user.sub])
@@ -342,14 +353,32 @@ app.get('/api/admin/stats', adminMiddleware, async (req, res) => {
     const paid      = await db.get("SELECT COUNT(*) as v FROM orders WHERE status='paid'")
     const customers = await db.get("SELECT COUNT(*) as v FROM customers")
     const pending   = await db.get("SELECT COUNT(*) as v FROM orders WHERE status='pending'")
-    res.json({ revenue: revenue.v, paid_orders: paid.v, customers: customers.v, pending_orders: pending.v })
+    const monthly   = await db.all("SELECT DATE_FORMAT(paid_at,'%Y-%m') as month, COALESCE(SUM(amount),0) as revenue, COUNT(*) as orders FROM orders WHERE status='paid' AND paid_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH) GROUP BY month ORDER BY month ASC")
+    res.json({ revenue: revenue.v, paid_orders: paid.v, customers: customers.v, pending_orders: pending.v, monthly })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
 app.get('/api/admin/orders', adminMiddleware, async (req, res) => {
   try {
     const page = parseInt(req.query.page || '1')
-    res.json(await db.all('SELECT o.*, p.name as product FROM orders o JOIN products p ON p.id = o.product_id ORDER BY o.created_at DESC LIMIT 50 OFFSET ?', [(page - 1) * 50]))
+    const search = req.query.search || ''
+    const status = req.query.status || ''
+    let where = ''; const params = []
+    if (search) { where += ' AND (o.email LIKE ? OR o.license_key LIKE ?)'; params.push(`%${search}%`, `%${search}%`) }
+    if (status) { where += ' AND o.status = ?'; params.push(status) }
+    params.push((page - 1) * 50)
+    res.json(await db.all(`SELECT o.*, p.name as product FROM orders o JOIN products p ON p.id = o.product_id WHERE 1=1${where} ORDER BY o.created_at DESC LIMIT 50 OFFSET ?`, params))
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.get('/api/admin/orders/export-csv', adminMiddleware, async (req, res) => {
+  try {
+    const rows = await db.all("SELECT o.id, o.email, p.name as product, o.amount, o.payment_method, o.status, o.license_key, o.coupon_code, o.discount, o.created_at, o.paid_at FROM orders o JOIN products p ON p.id = o.product_id ORDER BY o.created_at DESC")
+    const header = 'ID,Email,Produit,Montant,Méthode,Statut,Licence,Coupon,Remise,Créé le,Payé le'
+    const lines = rows.map(r => [r.id, r.email, r.product, r.amount, r.payment_method, r.status, r.license_key, r.coupon_code, r.discount, r.created_at, r.paid_at || ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader('Content-Disposition', `attachment; filename="commandes-${new Date().toISOString().slice(0,10)}.csv"`)
+    res.send('﻿' + [header, ...lines].join('\n'))
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
@@ -615,9 +644,31 @@ app.get("/download", (req, res) => {
 app.use(express.static(path.join(__dirname, 'frontend', 'dist')))
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html')))
 
+async function checkExpiringLicenses() {
+  try {
+    const headers = { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }
+    const r = await axios.get(`${process.env.LICENSE_SERVER_URL}/admin/keys`, { headers, timeout: 15000 })
+    const keys = Array.isArray(r.data) ? r.data : (r.data.keys || [])
+    const now = Math.floor(Date.now() / 1000)
+    const in3days = now + 3 * 86400
+    for (const k of keys) {
+      if (!k.expires_at || k.expires_at > in3days || k.expires_at <= now) continue
+      const order = await db.get("SELECT o.email, p.name as product_name FROM orders o JOIN products p ON p.id = o.product_id WHERE o.license_key = ? AND o.status = 'paid'", [k.key])
+      if (!order) continue
+      const daysLeft = Math.ceil((k.expires_at - now) / 86400)
+      const SITE = process.env.SITE_URL || 'https://rustservermanagerpro.com'
+      const html = `<!DOCTYPE html><html><body style="background:#0d0d0f;color:#f1f1f3;font-family:Inter,sans-serif;padding:40px 20px;margin:0"><div style="max-width:520px;margin:0 auto"><div style="text-align:center;margin-bottom:24px"><img src="${SITE}/logo.png" alt="RSM Pro" style="height:64px;width:auto"/></div><h1 style="color:#c12814;text-align:center;margin:0 0 6px">Votre licence expire bientôt</h1><p style="text-align:center;color:#8b8b96;margin:0 0 24px">Il vous reste <strong style="color:#f97316">${daysLeft} jour${daysLeft > 1 ? 's' : ''}</strong> sur votre licence.</p><div style="background:rgba(193,40,20,0.06);border:1px solid rgba(193,40,20,0.25);border-radius:12px;padding:24px"><p style="color:#8b8b96;font-size:0.85rem;margin:0 0 4px">Produit</p><p style="margin:0 0 20px;font-weight:600;color:#fff">${order.product_name}</p><p style="color:#8b8b96;font-size:0.85rem;margin:0 0 8px">Clé</p><div style="background:#161a1c;border:1px solid rgba(193,40,20,0.35);border-radius:8px;padding:14px;text-align:center;font-family:monospace;font-size:1rem;color:#c12814;letter-spacing:0.1em;margin-bottom:20px">${k.key}</div><a href="${SITE}/checkout" style="display:block;background:#c12814;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:8px;font-weight:700">Renouveler maintenant</a></div><p style="text-align:center;color:#4c4c4d;font-size:0.75rem;margin-top:24px">© ${new Date().getFullYear()} Rust Server Manager Pro</p></div></body></html>`
+      mailer.sendMail({ from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>`, to: order.email, subject: `Votre licence RSM Pro expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`, html }).catch(() => {})
+    }
+  } catch(e) { console.error('[expiry-check]', e.message) }
+}
+
 init().then(() => {
   app.listen(PORT, () => console.log(`RSM Shop running on port ${PORT}`))
   startBot()
+  // Vérification des licences expirant dans 3 jours — toutes les 24h
+  setInterval(checkExpiringLicenses, 24 * 60 * 60 * 1000)
+  setTimeout(checkExpiringLicenses, 5000)
 }).catch(e => {
   console.error('DB init failed:', e.message)
   require('fs').appendFileSync(__dirname + '/crash.log', new Date().toISOString() + ' DB INIT: ' + e.stack + '\n')
