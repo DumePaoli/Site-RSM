@@ -49,9 +49,11 @@ async function generateLicenseKey(notes = '', maxMachines = 2, tier = 'pro', exp
   return r.data.keys[0]
 }
 
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465')
 const mailer = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587'),
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465,
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
 })
 
