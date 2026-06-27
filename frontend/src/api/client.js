@@ -66,3 +66,8 @@ export const adminRefreshVersion = () => api.post('/api/admin/refresh-version').
 export const adminBotGetWelcomeConfig = () => api.get('/api/admin/bot/welcome-config').then(r => r.data)
 export const adminBotSetWelcomeConfig = (d) => api.post('/api/admin/bot/welcome-config', d).then(r => r.data)
 export const adminBotSendTicketEmbed = (d) => api.post('/api/admin/bot/send-ticket-embed', d).then(r => r.data)
+export const adminLogs = () => api.get('/api/admin/logs').then(r => r.data)
+export const adminUpdateOrderNotes = (id, notes) => api.patch(`/api/admin/orders/${id}/notes`, { notes }).then(r => r.data)
+export const forgotPassword = (email) => api.post('/api/auth/forgot-password', { email }).then(r => r.data)
+export const resetPassword = (token, password) => api.post('/api/auth/reset-password', { token, password }).then(r => r.data)
+export const getReleases = () => api.get('/api/releases').then(r => r.data)

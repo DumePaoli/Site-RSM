@@ -11,9 +11,10 @@ import {
   adminBotSendTicketEmbed, adminBotGetWelcomeConfig, adminBotSetWelcomeConfig,
   adminExportCSV
 } from '../api/client'
-import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw, Bot, Hash, Shield, Ticket, Send, Megaphone, X, Download, Search, TrendingUp } from 'lucide-react'
+import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw, Bot, Hash, Shield, Ticket, Send, Megaphone, X, Download, Search, TrendingUp, ClipboardList, Edit2, Check } from 'lucide-react'
+import { adminLogs, adminUpdateOrderNotes } from '../api/client'
 
-const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences', 'HWIDs', 'Bot']
+const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences', 'HWIDs', 'Bot', 'Logs']
 const LIC_DURATIONS = [
   { value: '0',       label: 'Lifetime (pas d\'expiration)' },
   { value: '300',     label: '5 minutes' },
@@ -72,6 +73,9 @@ export default function AdminPage() {
   const [hwidSearch, setHwidSearch] = useState('')
   const [orderSearch, setOrderSearch] = useState('')
   const [orderStatus, setOrderStatus] = useState('')
+  const [logs, setLogs] = useState([])
+  const [editingNote, setEditingNote] = useState(null)
+  const [noteValue, setNoteValue] = useState('')
 
   // Bot state
   const [botStats, setBotStats] = useState(null)
@@ -128,6 +132,11 @@ export default function AdminPage() {
     adminBlacklist().then(setBlacklist).catch(handleApiError)
     adminManualLicenses().then(rows => setLicKeys(rows.map(r => ({ key: r.license_key, notes: r.notes, at: new Date(r.created_at).toLocaleString('fr-FR') })))).catch(handleApiError)
   }, [authed])
+
+  useEffect(() => {
+    if (!authed || tab !== 'Logs') return
+    adminLogs().then(setLogs).catch(() => {})
+  }, [authed, tab])
 
   useEffect(() => {
     if (!authed || tab !== 'Bot') return
@@ -404,7 +413,7 @@ export default function AdminPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-surface-400 border-b border-surface-700">
-                  {['#', 'Email', 'Produit', 'Montant', 'Méthode', 'Statut', 'Clé', 'Date', 'Actions'].map(h => (
+                  {['#', 'Email', 'Produit', 'Montant', 'Méthode', 'Statut', 'Clé', 'Date', 'Notes', 'Actions'].map(h => (
                     <th key={h} className="pb-3 pr-4 font-medium">{h}</th>
                   ))}
                 </tr>
@@ -420,6 +429,19 @@ export default function AdminPage() {
                     <td className="py-3 pr-4"><StatusBadge status={o.status} /></td>
                     <td className="py-3 pr-4 font-mono text-xs text-surface-400">{o.license_key || '—'}</td>
                     <td className="py-3 pr-4 text-surface-400">{new Date(o.created_at).toLocaleDateString('fr-FR')}</td>
+                    <td className="py-3 pr-4 max-w-[160px]">
+                      {editingNote === o.id ? (
+                        <div className="flex items-center gap-1">
+                          <input autoFocus className="input text-xs py-1 px-2 flex-1" value={noteValue} onChange={e => setNoteValue(e.target.value)} onKeyDown={async e => { if (e.key === 'Enter') { await adminUpdateOrderNotes(o.id, noteValue); setOrders(prev => prev.map(x => x.id === o.id ? { ...x, notes: noteValue } : x)); setEditingNote(null) } if (e.key === 'Escape') setEditingNote(null) }} />
+                          <button onClick={async () => { await adminUpdateOrderNotes(o.id, noteValue); setOrders(prev => prev.map(x => x.id === o.id ? { ...x, notes: noteValue } : x)); setEditingNote(null) }} className="text-green-400 hover:text-green-300"><Check size={12} /></button>
+                        </div>
+                      ) : (
+                        <button onClick={() => { setEditingNote(o.id); setNoteValue(o.notes || '') }} className="flex items-center gap-1 text-surface-500 hover:text-white transition-colors text-xs group">
+                          <span className={o.notes ? 'text-surface-300' : 'italic'}>{o.notes || 'Ajouter...'}</span>
+                          <Edit2 size={10} className="opacity-0 group-hover:opacity-100" />
+                        </button>
+                      )}
+                    </td>
                     <td className="py-3">
                       <div className="flex items-center gap-2">
                         {o.status === 'paid' && (
@@ -1026,6 +1048,42 @@ export default function AdminPage() {
                 </form>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Logs */}
+        {tab === 'Logs' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white flex items-center gap-2"><ClipboardList size={16} className="text-rust-500" /> Journal des actions admin</h3>
+              <button onClick={() => adminLogs().then(setLogs)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"><RefreshCw size={12} /> Actualiser</button>
+            </div>
+            <div className="card overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-surface-400 border-b border-surface-700">
+                    {['Date', 'Action', 'Détails'].map(h => <th key={h} className="pb-3 pr-4 font-medium">{h}</th>)}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-800">
+                  {logs.map(l => (
+                    <tr key={l.id}>
+                      <td className="py-3 pr-4 text-surface-500 text-xs whitespace-nowrap">{new Date(l.created_at).toLocaleString('fr-FR')}</td>
+                      <td className="py-3 pr-4">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-mono ${
+                          l.action.includes('ban') ? 'bg-red-500/15 text-red-400' :
+                          l.action.includes('refund') || l.action.includes('delete') ? 'bg-orange-500/15 text-orange-400' :
+                          l.action.includes('generate') ? 'bg-blue-500/15 text-blue-400' :
+                          'bg-surface-700 text-surface-400'
+                        }`}>{l.action}</span>
+                      </td>
+                      <td className="py-3 text-surface-400 text-xs">{l.details}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {logs.length === 0 && <p className="text-center text-surface-500 py-8">Aucune action enregistrée</p>}
+            </div>
           </div>
         )}
       </div>
