@@ -86,8 +86,8 @@ export default function SuccessPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="/download"
-            className="btn-primary justify-center">
+          <a href="https://github.com/DumePaoli/RSM-Releases/releases/latest/download/Rust.Server.Manager.Pro.exe"
+            className="btn-primary justify-center" target="_blank" rel="noreferrer">
             <Download size={16} /> Télécharger RSM Pro
           </a>
           <Link to="/dashboard" className="btn-secondary justify-center">
