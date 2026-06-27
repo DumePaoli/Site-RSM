@@ -111,7 +111,7 @@ export default function HomePage() {
   const { lang } = useLang()
   const [products, setProducts] = useState([])
   const [activeFeature, setActiveFeature] = useState(0)
-  const [version, setVersion] = useState('v1.1.24')
+  const [version, setVersion] = useState('v1.1.52')
   const [lightbox, setLightbox] = useState(null)
 
   useEffect(() => {
@@ -368,7 +368,7 @@ export default function HomePage() {
             <Link to="/checkout" className="btn-primary px-8 py-4 text-base">
               {t('cta.buy', lang)} <ArrowRight size={17} />
             </Link>
-            <a href="/download" className="btn-secondary px-8 py-4 text-base">
+            <a href="https://github.com/DumePaoli/RSM-Releases/releases/latest/download/Rust.Server.Manager.Pro.exe" className="btn-secondary px-8 py-4 text-base">
               <Download size={16} /> {t('cta.download', lang)}
             </a>
           </div>

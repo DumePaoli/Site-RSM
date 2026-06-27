@@ -12,6 +12,10 @@ import DashboardPage from './pages/DashboardPage'
 import AdminPage from './pages/AdminPage'
 import BotPage from './pages/BotPage'
 import StatusPage from './pages/StatusPage'
+import CGVPage from './pages/CGVPage'
+import PrivacyPage from './pages/PrivacyPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 export default function App() {
   return (
@@ -29,7 +33,11 @@ export default function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/admin"     element={<AdminPage />} />
               <Route path="/bot"       element={<BotPage />} />
-              <Route path="/status"   element={<StatusPage />} />
+              <Route path="/status"          element={<StatusPage />} />
+              <Route path="/cgv"            element={<CGVPage />} />
+              <Route path="/confidentialite" element={<PrivacyPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password"  element={<ResetPasswordPage />} />
             </Routes>
           </main>
           <Footer />

@@ -36,7 +36,8 @@ async function init() {
       password   VARCHAR(255) NOT NULL,
       name       VARCHAR(255) DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      banned     TINYINT DEFAULT 0
+      banned     TINYINT DEFAULT 0,
+      discord_id VARCHAR(30) DEFAULT NULL
     );
     CREATE TABLE IF NOT EXISTS products (
       id          INT AUTO_INCREMENT PRIMARY KEY,
@@ -84,8 +85,25 @@ async function init() {
       license_key VARCHAR(255) NOT NULL,
       notes      VARCHAR(255) DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id          INT AUTO_INCREMENT PRIMARY KEY,
+      customer_id INT NOT NULL,
+      token       VARCHAR(128) NOT NULL,
+      expires_at  DATETIME NOT NULL,
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_token (token)
+    );
+    CREATE TABLE IF NOT EXISTS admin_logs (
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      action     VARCHAR(255) NOT NULL,
+      details    TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
+  // Add columns that may not exist on existing installs
+  await db.run('ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT NULL').catch(() => {})
+  await db.run('ALTER TABLE customers ADD COLUMN IF NOT EXISTS discord_id VARCHAR(30) DEFAULT NULL').catch(() => {})
 
   try { await db.exec('ALTER TABLE orders ADD COLUMN hwid VARCHAR(512) DEFAULT NULL') } catch {}
 

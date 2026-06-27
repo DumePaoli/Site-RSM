@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { Copy, CheckCircle2, RefreshCw, Download, ShoppingBag, LogOut } from 'lucide-react'
-import { getMyOrders, resendKey } from '../api/client'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { Copy, CheckCircle2, RefreshCw, Download, ShoppingBag, LogOut, MessageSquare } from 'lucide-react'
+import { getMyOrders, resendKey, getMe } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 
 function StatusBadge({ status }) {
@@ -13,15 +13,26 @@ function StatusBadge({ status }) {
 export default function DashboardPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [orders, setOrders]   = useState([])
-  const [loading, setLoading] = useState(true)
-  const [copied, setCopied]   = useState(null)
-  const [resent, setResent]   = useState(null)
+  const [searchParams] = useSearchParams()
+  const [orders, setOrders]         = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [copied, setCopied]         = useState(null)
+  const [resent, setResent]         = useState(null)
+  const [discordLinked, setDiscordLinked] = useState(null)
+  const [discordStatus, setDiscordStatus] = useState(null)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
     getMyOrders().then(setOrders).finally(() => setLoading(false))
+    getMe().then(me => setDiscordLinked(me.discord_id || null))
+    const ds = searchParams.get('discord')
+    if (ds) setDiscordStatus(ds === 'success' ? 'success' : searchParams.get('msg') || 'Erreur')
   }, [user])
+
+  const connectDiscord = () => {
+    const token = localStorage.getItem('rsm_token')
+    window.location.href = `/api/auth/discord?token=${token}`
+  }
 
   const copy = (key, id) => {
     navigator.clipboard.writeText(key)
@@ -54,6 +65,30 @@ export default function DashboardPage() {
               <LogOut size={14} /> Déconnexion
             </button>
           </div>
+        </div>
+
+        {/* Discord linking */}
+        <div className="card mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <MessageSquare size={18} className="text-rust-500" />
+            <h2 className="text-white font-semibold">Rôle Discord Customer</h2>
+          </div>
+          {discordStatus === 'success' || discordLinked ? (
+            <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3">
+              <CheckCircle2 size={16} className="text-green-400 flex-shrink-0" />
+              <p className="text-green-400 text-sm font-medium">Discord lié — rôle Customer attribué ✓</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-surface-400 text-sm">Connecte ton compte Discord pour recevoir automatiquement le rôle <strong className="text-white">Customer</strong> sur notre serveur.</p>
+              {discordStatus && discordStatus !== 'success' && (
+                <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{discordStatus}</p>
+              )}
+              <button onClick={connectDiscord} className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm">
+                <MessageSquare size={16} /> Connecter Discord
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Orders */}
@@ -104,15 +139,15 @@ export default function DashboardPage() {
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <a
-                          href="/download"
-                          className="btn-secondary text-xs py-2 px-3"
-                        >
+                        <a href="https://github.com/DumePaoli/RSM-Releases/releases/latest/download/Rust.Server.Manager.Pro.exe" className="btn-secondary text-xs py-2 px-3" target="_blank" rel="noreferrer">
                           <Download size={13} /> Télécharger
                         </a>
                         <button onClick={() => resend(o.id)} className="btn-secondary text-xs py-2 px-3">
                           <RefreshCw size={13} /> {resent === o.id ? 'Email envoyé !' : 'Renvoyer par email'}
                         </button>
+                        <Link to="/checkout" className="btn-primary text-xs py-2 px-3">
+                          Renouveler
+                        </Link>
                       </div>
                     </div>
                   )}

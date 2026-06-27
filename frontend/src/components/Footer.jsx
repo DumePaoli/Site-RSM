@@ -52,7 +52,12 @@ export default function Footer() {
         </div>
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between gap-3 text-xs text-surface-600">
           <p>{t('footer.copy', lang)}</p>
-          <p>{t('footer.disclaimer', lang)}</p>
+          <div className="flex gap-4">
+            <Link to="/cgv" className="hover:text-white transition-colors">CGV</Link>
+            <Link to="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
+            <Link to="/status" className="hover:text-white transition-colors">Statut</Link>
+            <p>{t('footer.disclaimer', lang)}</p>
+          </div>
         </div>
       </div>
     </footer>
