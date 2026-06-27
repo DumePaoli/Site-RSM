@@ -7,7 +7,7 @@ export default function CGVPage() {
 
         <section className="mb-8">
           <h2 className="text-xl font-bold text-white mb-3">1. Identification du vendeur</h2>
-          <p className="text-surface-400">Rust Server Manager Pro est édité par Dylan Paoli. Contact : <a href="mailto:noreply@rustservermanagerpro.com" className="text-rust-400 hover:underline">noreply@rustservermanagerpro.com</a></p>
+          <p className="text-surface-400">Rust Server Manager Pro est édité par RSM Pro. Contact : <a href="mailto:noreply@rustservermanagerpro.com" className="text-rust-400 hover:underline">noreply@rustservermanagerpro.com</a></p>
         </section>
 
         <section className="mb-8">
