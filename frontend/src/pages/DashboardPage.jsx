@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Copy, CheckCircle2, RefreshCw, Download, ShoppingBag, LogOut, MessageSquare } from 'lucide-react'
 import { getMyOrders, resendKey, getMe } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
-import api from '../api/client'
 
 function StatusBadge({ status }) {
   const cls = { paid: 'badge-paid', pending: 'badge-pending', failed: 'badge-failed', refunded: 'badge-refunded' }
@@ -14,32 +13,25 @@ function StatusBadge({ status }) {
 export default function DashboardPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [orders, setOrders]     = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [copied, setCopied]     = useState(null)
-  const [resent, setResent]     = useState(null)
-  const [discordId, setDiscordId] = useState('')
+  const [searchParams] = useSearchParams()
+  const [orders, setOrders]         = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [copied, setCopied]         = useState(null)
+  const [resent, setResent]         = useState(null)
   const [discordLinked, setDiscordLinked] = useState(null)
-  const [discordLoading, setDiscordLoading] = useState(false)
-  const [discordErr, setDiscordErr] = useState('')
-  const [discordOk, setDiscordOk] = useState(false)
+  const [discordStatus, setDiscordStatus] = useState(null)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
     getMyOrders().then(setOrders).finally(() => setLoading(false))
     getMe().then(me => setDiscordLinked(me.discord_id || null))
+    const ds = searchParams.get('discord')
+    if (ds) setDiscordStatus(ds === 'success' ? 'success' : searchParams.get('msg') || 'Erreur')
   }, [user])
 
-  const linkDiscord = async (e) => {
-    e.preventDefault()
-    setDiscordErr(''); setDiscordOk(false); setDiscordLoading(true)
-    try {
-      await api.post('/api/me/link-discord', { discord_id: discordId })
-      setDiscordLinked(discordId)
-      setDiscordOk(true)
-    } catch(err) {
-      setDiscordErr(err.response?.data?.detail || 'Erreur')
-    } finally { setDiscordLoading(false) }
+  const connectDiscord = () => {
+    const token = localStorage.getItem('rsm_token')
+    window.location.href = `/api/auth/discord?token=${token}`
   }
 
   const copy = (key, id) => {
@@ -81,33 +73,21 @@ export default function DashboardPage() {
             <MessageSquare size={18} className="text-rust-500" />
             <h2 className="text-white font-semibold">Rôle Discord Customer</h2>
           </div>
-          {discordLinked ? (
+          {discordStatus === 'success' || discordLinked ? (
             <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3">
               <CheckCircle2 size={16} className="text-green-400 flex-shrink-0" />
-              <div>
-                <p className="text-green-400 text-sm font-medium">Discord lié — rôle Customer attribué</p>
-                <p className="text-surface-500 text-xs mt-0.5">ID : {discordLinked}</p>
-              </div>
+              <p className="text-green-400 text-sm font-medium">Discord lié — rôle Customer attribué ✓</p>
             </div>
           ) : (
-            <form onSubmit={linkDiscord} className="space-y-3">
-              <p className="text-surface-400 text-sm">Entre ton ID Discord pour recevoir automatiquement le rôle <strong className="text-white">Customer</strong> sur le serveur.</p>
-              <p className="text-surface-500 text-xs">Pour trouver ton ID : Discord → Paramètres → Avancés → activer "Mode développeur" → clic droit sur ton pseudo → Copier l'identifiant.</p>
-              <div className="flex gap-2">
-                <input
-                  className="input flex-1"
-                  placeholder="Ex: 123456789012345678"
-                  value={discordId}
-                  onChange={e => setDiscordId(e.target.value)}
-                  pattern="\d{17,20}"
-                />
-                <button type="submit" disabled={discordLoading || !discordId} className="btn-primary text-sm py-2 px-4 disabled:opacity-50">
-                  {discordLoading ? 'Liaison…' : 'Lier'}
-                </button>
-              </div>
-              {discordErr && <p className="text-red-400 text-sm">{discordErr}</p>}
-              {discordOk && <p className="text-green-400 text-sm flex items-center gap-1"><CheckCircle2 size={14} /> Rôle attribué avec succès !</p>}
-            </form>
+            <div className="space-y-3">
+              <p className="text-surface-400 text-sm">Connecte ton compte Discord pour recevoir automatiquement le rôle <strong className="text-white">Customer</strong> sur notre serveur.</p>
+              {discordStatus && discordStatus !== 'success' && (
+                <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{discordStatus}</p>
+              )}
+              <button onClick={connectDiscord} className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm">
+                <MessageSquare size={16} /> Connecter Discord
+              </button>
+            </div>
           )}
         </div>
 

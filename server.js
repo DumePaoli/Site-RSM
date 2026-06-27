@@ -265,17 +265,58 @@ app.get('/api/me', authMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-app.post('/api/me/link-discord', authMiddleware, async (req, res) => {
+const DISCORD_CLIENT_ID     = process.env.DISCORD_OAUTH_CLIENT_ID || '1512458990070534254'
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_OAUTH_CLIENT_SECRET || 'mPB_0wD_2iP9Ud_z9nLmvzoEJD1jLgox'
+const DISCORD_REDIRECT_URI  = process.env.DISCORD_OAUTH_REDIRECT || 'https://rustservermanagerpro.com/api/auth/discord/callback'
+
+// Stockage temporaire des états OAuth (token JWT → state)
+const oauthStates = new Map()
+
+app.get('/api/auth/discord', (req, res) => {
+  const token = req.query.token
+  if (!token) return res.status(401).json({ detail: 'Token manquant' })
+  let customerId
+  try { customerId = jwt.verify(token, JWT_SECRET).sub } catch { return res.status(401).json({ detail: 'Token invalide' }) }
+  const state = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+  oauthStates.set(state, customerId)
+  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000) // expire après 10 min
+  const url = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${state}`
+  res.redirect(url)
+})
+
+app.get('/api/auth/discord/callback', async (req, res) => {
+  const SITE = process.env.SITE_URL || 'https://rustservermanagerpro.com'
   try {
-    const { discord_id } = req.body
-    if (!discord_id || !/^\d{17,20}$/.test(discord_id)) return res.status(400).json({ detail: 'ID Discord invalide (17-20 chiffres)' })
-    const hasPaid = await db.get("SELECT id FROM orders WHERE customer_id = ? AND status = 'paid' LIMIT 1", [req.user.sub])
-    if (!hasPaid) return res.status(403).json({ detail: 'Aucune commande active trouvée' })
-    await db.run('UPDATE customers SET discord_id = ? WHERE id = ?', [discord_id, req.user.sub])
+    const { code, state } = req.query
+    const customerId = oauthStates.get(state)
+    if (!customerId) return res.redirect(`${SITE}/dashboard?discord=error&msg=Session+expirée`)
+    oauthStates.delete(state)
+
+    const tokenRes = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+      client_id: DISCORD_CLIENT_ID,
+      client_secret: DISCORD_CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: DISCORD_REDIRECT_URI,
+    }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+
+    const userRes = await axios.get('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${tokenRes.data.access_token}` }
+    })
+
+    const discordId = userRes.data.id
+    const hasPaid = await db.get("SELECT id FROM orders WHERE customer_id = ? AND status = 'paid' LIMIT 1", [customerId])
+    if (!hasPaid) return res.redirect(`${SITE}/dashboard?discord=error&msg=Aucune+commande+active`)
+
+    await db.run('UPDATE customers SET discord_id = ? WHERE id = ?', [discordId, customerId])
     const { assignCustomerRole } = require('./bot')
-    await assignCustomerRole(discord_id)
-    res.json({ ok: true })
-  } catch(e) { res.status(500).json({ detail: e.response?.data?.detail || e.message }) }
+    await assignCustomerRole(discordId)
+    res.redirect(`${SITE}/dashboard?discord=success`)
+  } catch(e) {
+    console.error('[discord oauth]', e.message)
+    const SITE = process.env.SITE_URL || 'https://rustservermanagerpro.com'
+    res.redirect(`${SITE}/dashboard?discord=error&msg=${encodeURIComponent(e.message)}`)
+  }
 })
 
 app.get('/api/me/orders', authMiddleware, async (req, res) => {
