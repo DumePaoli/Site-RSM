@@ -59,17 +59,22 @@ const mailer = nodemailer.createTransport({
 
 function sendDeliveryEmail(to, licenseKey, productName) {
   if (!process.env.SMTP_HOST) return
-  const html = `<!DOCTYPE html><html><body style="background:#0d0d0f;color:#f1f1f3;font-family:Inter,sans-serif;padding:40px 20px">
+  const SITE = process.env.SITE_URL || 'https://rustservermanagerpro.com'
+  const html = `<!DOCTYPE html><html><body style="background:#0d0d0f;color:#f1f1f3;font-family:Inter,sans-serif;padding:40px 20px;margin:0">
   <div style="max-width:520px;margin:0 auto">
-    <h1 style="color:#f97316;text-align:center">Rust Server Manager Pro</h1>
-    <p style="text-align:center;color:#8b8b96">Merci pour votre achat !</p>
-    <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:24px;margin-top:24px">
-      <p style="color:#8b8b96;font-size:0.85rem;margin:0 0 8px">Produit</p>
-      <p style="margin:0 0 20px;font-weight:600">${productName}</p>
-      <p style="color:#8b8b96;font-size:0.85rem;margin:0 0 8px">Clé de licence</p>
-      <div style="background:#1a1a1f;border:1px solid rgba(249,115,22,0.3);border-radius:8px;padding:14px;text-align:center;font-family:monospace;font-size:1.1rem;color:#f97316;letter-spacing:0.1em;margin-bottom:20px">${licenseKey}</div>
-      <a href="${process.env.DOWNLOAD_URL}" style="display:block;background:#f97316;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:8px;font-weight:700">Télécharger RSM Pro</a>
+    <div style="text-align:center;margin-bottom:24px">
+      <img src="${SITE}/logo.png" alt="RSM Pro" style="height:64px;width:auto" />
     </div>
+    <h1 style="color:#c12814;text-align:center;margin:0 0 6px;font-size:1.5rem">Rust Server Manager Pro</h1>
+    <p style="text-align:center;color:#8b8b96;margin:0 0 24px">Merci pour votre achat !</p>
+    <div style="background:rgba(193,40,20,0.06);border:1px solid rgba(193,40,20,0.25);border-radius:12px;padding:24px">
+      <p style="color:#8b8b96;font-size:0.85rem;margin:0 0 4px">Produit</p>
+      <p style="margin:0 0 20px;font-weight:600;color:#fff">${productName}</p>
+      <p style="color:#8b8b96;font-size:0.85rem;margin:0 0 8px">Clé de licence</p>
+      <div style="background:#161a1c;border:1px solid rgba(193,40,20,0.35);border-radius:8px;padding:14px;text-align:center;font-family:monospace;font-size:1.1rem;color:#c12814;letter-spacing:0.1em;margin-bottom:20px">${licenseKey}</div>
+      <a href="${process.env.DOWNLOAD_URL || SITE + '/download'}" style="display:block;background:#c12814;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:8px;font-weight:700;font-size:1rem">Télécharger RSM Pro</a>
+    </div>
+    <p style="text-align:center;color:#4c4c4d;font-size:0.75rem;margin-top:24px">© ${new Date().getFullYear()} Rust Server Manager Pro</p>
   </div></body></html>`
   mailer.sendMail({
     from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>`,
