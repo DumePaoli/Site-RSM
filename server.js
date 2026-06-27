@@ -552,7 +552,7 @@ app.get('/api/admin/bot/debug', adminMiddleware, (req, res) => {
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 app.get("/download", (req, res) => {
-  const url = process.env.DOWNLOAD_URL || "https://github.com/DumePaoli/Rust-Server-Manger2/releases/latest/download/RustServerManager.exe"
+  const url = process.env.DOWNLOAD_URL || "https://github.com/DumePaoli/Rust-Server-Manger2/releases/latest/download/Rust.Server.Manager.Pro.exe"
   res.redirect(302, url)
 })
 
