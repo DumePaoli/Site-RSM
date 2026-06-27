@@ -72,7 +72,8 @@ function sendDeliveryEmail(to, licenseKey, productName) {
       <p style="margin:0 0 20px;font-weight:600;color:#fff">${productName}</p>
       <p style="color:#8b8b96;font-size:0.85rem;margin:0 0 8px">Clé de licence</p>
       <div style="background:#161a1c;border:1px solid rgba(193,40,20,0.35);border-radius:8px;padding:14px;text-align:center;font-family:monospace;font-size:1.1rem;color:#c12814;letter-spacing:0.1em;margin-bottom:20px">${licenseKey}</div>
-      <a href="${process.env.DOWNLOAD_URL || SITE + '/download'}" style="display:block;background:#c12814;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:8px;font-weight:700;font-size:1rem">Télécharger RSM Pro</a>
+      <a href="${process.env.DOWNLOAD_URL || SITE + '/download'}" style="display:block;background:#c12814;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:8px;font-weight:700;font-size:1rem;margin-bottom:12px">Télécharger RSM Pro</a>
+      <a href="https://discord.gg/XxTRZwB3ta" style="display:block;background:#5865F2;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:8px;font-weight:700;font-size:1rem">Rejoindre le Discord</a>
     </div>
     <p style="text-align:center;color:#4c4c4d;font-size:0.75rem;margin-top:24px">© ${new Date().getFullYear()} Rust Server Manager Pro</p>
   </div></body></html>`
