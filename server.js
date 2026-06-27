@@ -393,6 +393,16 @@ app.post('/api/me/resend-key/:id', authMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
+// ── License HWID registration (no auth — called by RSM app)
+app.post('/api/license/register-hwid', async (req, res) => {
+  try {
+    const { license_key, hwid } = req.body
+    if (!license_key || !hwid) return res.status(400).json({ detail: 'license_key et hwid requis' })
+    await db.run('UPDATE orders SET hwid = ? WHERE license_key = ?', [hwid, license_key])
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
 // ── Admin
 app.get('/api/admin/stats', adminMiddleware, async (req, res) => {
   try {
@@ -688,7 +698,7 @@ app.delete('/api/admin/keys/:key', adminMiddleware, async (req, res) => {
   try {
     const key = req.params.key
     await axios.delete(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}`,
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/activations`,
       { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
     )
     await db.run("UPDATE orders SET status='revoked' WHERE license_key = ?", [key])

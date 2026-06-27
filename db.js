@@ -60,6 +60,7 @@ async function init() {
       payment_method VARCHAR(50) DEFAULT 'stripe',
       payment_intent VARCHAR(255) DEFAULT '',
       license_key    VARCHAR(255) DEFAULT '',
+      hwid           VARCHAR(512) DEFAULT NULL,
       coupon_code    VARCHAR(100) DEFAULT '',
       discount       DOUBLE DEFAULT 0,
       created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -103,6 +104,8 @@ async function init() {
   // Add columns that may not exist on existing installs
   await db.run('ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT NULL').catch(() => {})
   await db.run('ALTER TABLE customers ADD COLUMN IF NOT EXISTS discord_id VARCHAR(30) DEFAULT NULL').catch(() => {})
+
+  try { await db.exec('ALTER TABLE orders ADD COLUMN hwid VARCHAR(512) DEFAULT NULL') } catch {}
 
   const count = await db.get('SELECT COUNT(*) as c FROM products')
   if (!count || count.c === 0) {
