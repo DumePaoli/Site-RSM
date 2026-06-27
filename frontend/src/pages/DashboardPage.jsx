@@ -139,7 +139,7 @@ export default function DashboardPage() {
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <a href="/download" className="btn-secondary text-xs py-2 px-3">
+                        <a href="https://github.com/DumePaoli/RSM-Releases/releases/latest/download/Rust.Server.Manager.Pro.exe" className="btn-secondary text-xs py-2 px-3" target="_blank" rel="noreferrer">
                           <Download size={13} /> Télécharger
                         </a>
                         <button onClick={() => resend(o.id)} className="btn-secondary text-xs py-2 px-3">
