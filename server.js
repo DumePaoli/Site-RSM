@@ -89,6 +89,24 @@ async function notifyDiscord(msg) {
   axios.post(process.env.DISCORD_WEBHOOK_URL, { content: msg }).catch(() => {})
 }
 
+async function logAdminAction(action, details = '') {
+  await db.run('INSERT INTO admin_logs (action, details) VALUES (?,?)', [action, details]).catch(() => {})
+}
+
+function sendAdminOrderEmail(orderId, email, productName, amount) {
+  if (!process.env.SMTP_HOST || !process.env.ADMIN_EMAIL) return
+  const html = `<!DOCTYPE html><html><body style="background:#0d0d0f;color:#f1f1f3;font-family:Inter,sans-serif;padding:40px 20px;margin:0"><div style="max-width:520px;margin:0 auto"><h2 style="color:#c12814">💰 Nouvelle commande #${orderId}</h2><p style="color:#8b8b96">Un nouveau paiement a été reçu.</p><table style="width:100%;border-collapse:collapse;margin-top:16px"><tr><td style="color:#8b8b96;padding:6px 0">Produit</td><td style="color:#fff;font-weight:600">${productName}</td></tr><tr><td style="color:#8b8b96;padding:6px 0">Montant</td><td style="color:#c12814;font-weight:700">${Number(amount).toFixed(2)} €</td></tr><tr><td style="color:#8b8b96;padding:6px 0">Client</td><td style="color:#fff">${email}</td></tr></table></div></body></html>`
+  mailer.sendMail({ from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>`, to: process.env.ADMIN_EMAIL, subject: `[RSM Pro] Nouvelle commande #${orderId} — ${Number(amount).toFixed(2)} €`, html }).catch(() => {})
+}
+
+function sendPasswordResetEmail(to, token) {
+  if (!process.env.SMTP_HOST) return
+  const SITE = process.env.SITE_URL || 'https://rustservermanagerpro.com'
+  const link = `${SITE}/reset-password?token=${token}`
+  const html = `<!DOCTYPE html><html><body style="background:#0d0d0f;color:#f1f1f3;font-family:Inter,sans-serif;padding:40px 20px;margin:0"><div style="max-width:520px;margin:0 auto"><div style="text-align:center;margin-bottom:24px"><img src="${SITE}/logo.png" alt="RSM Pro" style="height:64px;width:auto"/></div><h1 style="color:#c12814;text-align:center;margin:0 0 6px">Réinitialisation du mot de passe</h1><p style="text-align:center;color:#8b8b96;margin:0 0 24px">Clique sur le bouton ci-dessous pour définir un nouveau mot de passe. Ce lien expire dans 1 heure.</p><div style="background:rgba(193,40,20,0.06);border:1px solid rgba(193,40,20,0.25);border-radius:12px;padding:24px;text-align:center"><a href="${link}" style="display:inline-block;background:#c12814;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:1rem">Réinitialiser le mot de passe</a><p style="color:#4c4c4d;font-size:0.75rem;margin-top:16px">Si tu n'as pas demandé cette réinitialisation, ignore cet email.</p></div><p style="text-align:center;color:#4c4c4d;font-size:0.75rem;margin-top:24px">© ${new Date().getFullYear()} Rust Server Manager Pro</p></div></body></html>`
+  mailer.sendMail({ from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>`, to, subject: 'Réinitialisation de ton mot de passe RSM Pro', html }).catch(e => console.error('[reset-email]', e.message))
+}
+
 // Rate limiters
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, max: 10,
@@ -111,6 +129,7 @@ async function fulfillOrder(orderId) {
   const customer = await db.get('SELECT id FROM customers WHERE email = ?', [order.email])
   if (customer) await db.run('UPDATE orders SET customer_id = ? WHERE id = ?', [customer.id, orderId])
   sendDeliveryEmail(order.email, key, product?.name || 'RSM Pro')
+  sendAdminOrderEmail(orderId, order.email, product?.name || 'RSM Pro', order.amount)
   await notifyDiscord(`💰 **Nouvelle vente !** #${orderId}\nProduit: ${product?.name} — ${order.amount.toFixed(2)} €\nClient: ${order.email}\nClé: \`${key}\``)
 }
 
@@ -138,6 +157,34 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     if (c.banned) return res.status(403).json({ detail: 'Compte banni' })
     const token = signToken({ sub: c.id, role: 'customer' })
     res.json({ token, customer: { id: c.id, email: c.email, name: c.name } })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body
+    const customer = await db.get('SELECT id FROM customers WHERE email = ?', [email?.toLowerCase()])
+    if (customer) {
+      const token = require('crypto').randomBytes(32).toString('hex')
+      const expires = new Date(Date.now() + 3600000).toISOString().slice(0, 19).replace('T', ' ')
+      await db.run('DELETE FROM password_reset_tokens WHERE customer_id = ?', [customer.id])
+      await db.run('INSERT INTO password_reset_tokens (customer_id, token, expires_at) VALUES (?,?,?)', [customer.id, token, expires])
+      sendPasswordResetEmail(email.toLowerCase(), token)
+    }
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body
+    if (!token || !password || password.length < 6) return res.status(400).json({ detail: 'Données invalides (6 caractères minimum)' })
+    const record = await db.get('SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > NOW()', [token])
+    if (!record) return res.status(400).json({ detail: 'Lien invalide ou expiré' })
+    const hashed = await bcrypt.hash(password, 10)
+    await db.run('UPDATE customers SET password = ? WHERE id = ?', [hashed, record.customer_id])
+    await db.run('DELETE FROM password_reset_tokens WHERE id = ?', [record.id])
+    res.json({ ok: true })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
@@ -382,12 +429,21 @@ app.get('/api/admin/orders/export-csv', adminMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
+app.patch('/api/admin/orders/:id/notes', adminMiddleware, async (req, res) => {
+  try {
+    await db.run('UPDATE orders SET notes = ? WHERE id = ?', [req.body.notes || '', req.params.id])
+    await logAdminAction('order_note', `#${req.params.id}: ${req.body.notes}`)
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
 app.post('/api/admin/orders/:id/refund', adminMiddleware, async (req, res) => {
   try {
     const o = await db.get('SELECT * FROM orders WHERE id = ?', [req.params.id])
     if (!o) return res.status(404).json({ detail: 'Introuvable' })
     if (o.license_key) axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${o.license_key}`, { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET } }).catch(() => {})
     await db.run("UPDATE orders SET status='refunded' WHERE id=?", [o.id])
+    await logAdminAction('refund', `Commande #${o.id} remboursée — ${o.email}`)
     res.json({ ok: true })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -398,6 +454,7 @@ app.delete('/api/admin/orders/:id', adminMiddleware, async (req, res) => {
     if (!o) return res.status(404).json({ detail: 'Introuvable' })
     if (o.license_key) await axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${o.license_key}`, { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET } }).catch(() => {})
     await db.run('DELETE FROM orders WHERE id = ?', [o.id])
+    await logAdminAction('delete_order', `Commande #${o.id} supprimée — ${o.email}`)
     res.json({ ok: true })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -408,13 +465,27 @@ app.get('/api/admin/customers', adminMiddleware, async (req, res) => {
 })
 
 app.post('/api/admin/customers/:id/ban', adminMiddleware, async (req, res) => {
-  try { await db.run('UPDATE customers SET banned=1 WHERE id=?', [req.params.id]); res.json({ ok: true }) }
-  catch(e) { res.status(500).json({ detail: e.message }) }
+  try {
+    const c = await db.get('SELECT email FROM customers WHERE id=?', [req.params.id])
+    await db.run('UPDATE customers SET banned=1 WHERE id=?', [req.params.id])
+    // Revoke all active licenses
+    const orders = await db.all("SELECT license_key FROM orders WHERE customer_id=? AND status='paid' AND license_key != ''", [req.params.id])
+    for (const o of orders) {
+      axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${o.license_key}`, { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET } }).catch(() => {})
+    }
+    await db.run("UPDATE orders SET status='revoked' WHERE customer_id=? AND status='paid'", [req.params.id])
+    await logAdminAction('ban', `Client #${req.params.id} ${c?.email || ''} banni — ${orders.length} licence(s) révoquée(s)`)
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
 app.post('/api/admin/customers/:id/unban', adminMiddleware, async (req, res) => {
-  try { await db.run('UPDATE customers SET banned=0 WHERE id=?', [req.params.id]); res.json({ ok: true }) }
-  catch(e) { res.status(500).json({ detail: e.message }) }
+  try {
+    const c = await db.get('SELECT email FROM customers WHERE id=?', [req.params.id])
+    await db.run('UPDATE customers SET banned=0 WHERE id=?', [req.params.id])
+    await logAdminAction('unban', `Client #${req.params.id} ${c?.email || ''} débanni`)
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
 app.get('/api/admin/coupons', adminMiddleware, async (req, res) => {
@@ -459,6 +530,7 @@ app.post('/api/admin/generate-license', adminMiddleware, async (req, res) => {
     const { notes = '', expires_in_seconds = 0 } = req.body
     const key = await generateLicenseKey(notes || 'admin-manual', 2, 'pro', expires_in_seconds)
     await db.run('INSERT INTO manual_licenses (license_key, notes) VALUES (?,?)', [key, notes])
+    await logAdminAction('generate_license', `Clé générée: ${key} | Notes: ${notes} | Durée: ${expires_in_seconds}s`)
     res.json({ key })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -466,6 +538,18 @@ app.post('/api/admin/generate-license', adminMiddleware, async (req, res) => {
 app.get('/api/admin/manual-licenses', adminMiddleware, async (req, res) => {
   try { res.json(await db.all('SELECT * FROM manual_licenses ORDER BY created_at DESC')) }
   catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.get('/api/admin/logs', adminMiddleware, async (req, res) => {
+  try { res.json(await db.all('SELECT * FROM admin_logs ORDER BY created_at DESC LIMIT 500')) }
+  catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.get('/api/releases', async (req, res) => {
+  try {
+    const r = await axios.get('https://api.github.com/repos/DumePaoli/Rust-Server-Manger2/releases', { headers: { 'User-Agent': 'RSM-Site' }, timeout: 8000 })
+    res.json(r.data.slice(0, 10).map(rel => ({ tag: rel.tag_name, name: rel.name || rel.tag_name, body: rel.body || '', published_at: rel.published_at, url: rel.html_url })))
+  } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
 app.delete('/api/admin/manual-licenses/:key', adminMiddleware, async (req, res) => {

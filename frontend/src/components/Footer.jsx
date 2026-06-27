@@ -54,6 +54,8 @@ export default function Footer() {
           <p>{t('footer.copy', lang)}</p>
           <div className="flex gap-4">
             <Link to="/cgv" className="hover:text-white transition-colors">CGV</Link>
+            <Link to="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
+            <Link to="/download" className="hover:text-white transition-colors">Télécharger</Link>
             <Link to="/status" className="hover:text-white transition-colors">Statut</Link>
             <p>{t('footer.disclaimer', lang)}</p>
           </div>

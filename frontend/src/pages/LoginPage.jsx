@@ -62,6 +62,9 @@ export default function LoginPage() {
           {t('login.noAccount', lang)}{' '}
           <Link to="/register" className="text-rust-500 hover:underline">{t('login.register', lang)}</Link>
         </p>
+        <p className="text-center text-surface-500 text-sm mt-2">
+          <Link to="/forgot-password" className="hover:text-white transition-colors">Mot de passe oublié ?</Link>
+        </p>
       </div>
     </div>
   )
