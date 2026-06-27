@@ -15,6 +15,7 @@ const WELCOME_CHANNEL_ID     = process.env.DISCORD_WELCOME_CHANNEL_ID
 const TICKET_CATEGORY_ID     = process.env.DISCORD_TICKET_CATEGORY_ID
 const VERIFIED_ROLE_ID       = process.env.DISCORD_VERIFIED_ROLE_ID
 const SUPPORT_ROLE_ID        = process.env.DISCORD_SUPPORT_ROLE_ID
+const CUSTOMER_ROLE_ID       = process.env.DISCORD_CUSTOMER_ROLE_ID || '1518016182307917954'
 
 const LICENSE_SERVER = process.env.LICENSE_SERVER_URL || 'https://rsm-license-server.fly.dev'
 const LICENSE_SECRET = process.env.LICENSE_ADMIN_SECRET || ''
@@ -449,4 +450,14 @@ function getBotDebug() {
   }
 }
 
-module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getBotDebug, getWelcomeConfig, setWelcomeConfig }
+async function assignCustomerRole(discordId) {
+  const guild = client.guilds.cache.get(GUILD_ID)
+  if (!guild) throw new Error('Guild non trouvé')
+  const member = await guild.members.fetch(discordId).catch(() => null)
+  if (!member) throw new Error('Membre Discord introuvable — assure-toi d\'être dans le serveur')
+  const role = guild.roles.cache.get(CUSTOMER_ROLE_ID)
+  if (!role) throw new Error('Rôle Customer introuvable')
+  await member.roles.add(role)
+}
+
+module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getBotDebug, getWelcomeConfig, setWelcomeConfig, assignCustomerRole }

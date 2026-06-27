@@ -259,10 +259,23 @@ app.get('/api/orders/:id', async (req, res) => {
 
 app.get('/api/me', authMiddleware, async (req, res) => {
   try {
-    const c = await db.get('SELECT id, email, name FROM customers WHERE id = ?', [req.user.sub])
+    const c = await db.get('SELECT id, email, name, discord_id FROM customers WHERE id = ?', [req.user.sub])
     if (!c) return res.status(404).json({ detail: 'Introuvable' })
     res.json(c)
   } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.post('/api/me/link-discord', authMiddleware, async (req, res) => {
+  try {
+    const { discord_id } = req.body
+    if (!discord_id || !/^\d{17,20}$/.test(discord_id)) return res.status(400).json({ detail: 'ID Discord invalide (17-20 chiffres)' })
+    const hasPaid = await db.get("SELECT id FROM orders WHERE customer_id = ? AND status = 'paid' LIMIT 1", [req.user.sub])
+    if (!hasPaid) return res.status(403).json({ detail: 'Aucune commande active trouvée' })
+    await db.run('UPDATE customers SET discord_id = ? WHERE id = ?', [discord_id, req.user.sub])
+    const { assignCustomerRole } = require('./bot')
+    await assignCustomerRole(discord_id)
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.response?.data?.detail || e.message }) }
 })
 
 app.get('/api/me/orders', authMiddleware, async (req, res) => {
