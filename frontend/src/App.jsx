@@ -12,6 +12,7 @@ import DashboardPage from './pages/DashboardPage'
 import AdminPage from './pages/AdminPage'
 import BotPage from './pages/BotPage'
 import StatusPage from './pages/StatusPage'
+import CGVPage from './pages/CGVPage'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/admin"     element={<AdminPage />} />
               <Route path="/bot"       element={<BotPage />} />
               <Route path="/status"   element={<StatusPage />} />
+              <Route path="/cgv"      element={<CGVPage />} />
             </Routes>
           </main>
           <Footer />

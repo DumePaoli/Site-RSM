@@ -8,9 +8,10 @@ import {
   adminHwids, adminResetHwid, adminRevokeKey, adminClearActivations, adminRefreshVersion,
   adminBotStats, adminBotChannels, adminBotTickets,
   adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease,
-  adminBotSendTicketEmbed, adminBotGetWelcomeConfig, adminBotSetWelcomeConfig
+  adminBotSendTicketEmbed, adminBotGetWelcomeConfig, adminBotSetWelcomeConfig,
+  adminExportCSV
 } from '../api/client'
-import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw, Bot, Hash, Shield, Ticket, Send, Megaphone, X } from 'lucide-react'
+import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw, Bot, Hash, Shield, Ticket, Send, Megaphone, X, Download, Search, TrendingUp } from 'lucide-react'
 
 const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences', 'HWIDs', 'Bot']
 const LIC_DURATIONS = [
@@ -69,6 +70,8 @@ export default function AdminPage() {
   const [hwidsLoading, setHwidsLoading] = useState(false)
   const [hwidsErr, setHwidsErr] = useState('')
   const [hwidSearch, setHwidSearch] = useState('')
+  const [orderSearch, setOrderSearch] = useState('')
+  const [orderStatus, setOrderStatus] = useState('')
 
   // Bot state
   const [botStats, setBotStats] = useState(null)
@@ -119,7 +122,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!authed) return
     adminStats().then(setStats).catch(handleApiError)
-    adminOrders().then(setOrders).catch(handleApiError)
+    adminOrders(1, orderSearch, orderStatus).then(setOrders).catch(handleApiError)
     adminCustomers().then(setCustomers).catch(handleApiError)
     adminCoupons().then(setCoupons).catch(handleApiError)
     adminBlacklist().then(setBlacklist).catch(handleApiError)
@@ -332,21 +335,40 @@ export default function AdminPage() {
 
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {[
-              { icon: <BarChart2 size={18} />, label: 'Revenus', value: `${stats.revenue.toFixed(2)} €` },
-              { icon: <ShoppingBag size={18} />, label: 'Commandes', value: stats.paid_orders },
-              { icon: <Users size={18} />, label: 'Clients', value: stats.customers },
-              { icon: <RefreshCw size={18} />, label: 'En attente', value: stats.pending_orders },
-            ].map(s => (
-              <div key={s.label} className="card flex items-center gap-4">
-                <div className="text-rust-500">{s.icon}</div>
-                <div>
-                  <div className="text-2xl font-black text-white">{s.value}</div>
-                  <div className="text-surface-400 text-xs">{s.label}</div>
+          <div className="mb-8 space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { icon: <BarChart2 size={18} />, label: 'Revenus total', value: `${Number(stats.revenue).toFixed(2)} €` },
+                { icon: <ShoppingBag size={18} />, label: 'Commandes', value: stats.paid_orders },
+                { icon: <Users size={18} />, label: 'Clients', value: stats.customers },
+                { icon: <RefreshCw size={18} />, label: 'En attente', value: stats.pending_orders },
+              ].map(s => (
+                <div key={s.label} className="card flex items-center gap-4">
+                  <div className="text-rust-500">{s.icon}</div>
+                  <div>
+                    <div className="text-2xl font-black text-white">{s.value}</div>
+                    <div className="text-surface-400 text-xs">{s.label}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            {stats.monthly && stats.monthly.length > 0 && (() => {
+              const max = Math.max(...stats.monthly.map(m => m.revenue), 1)
+              return (
+                <div className="card">
+                  <h3 className="font-semibold text-white flex items-center gap-2 mb-4"><TrendingUp size={16} className="text-rust-500" /> Revenus mensuels</h3>
+                  <div className="flex items-end gap-2 h-32">
+                    {stats.monthly.map(m => (
+                      <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-rust-400 text-xs font-bold">{Number(m.revenue).toFixed(0)}€</span>
+                        <div className="w-full bg-rust-500/80 rounded-t" style={{ height: `${Math.max((m.revenue / max) * 100, 4)}%` }} />
+                        <span className="text-surface-500 text-xs">{m.month.slice(5)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )}
 
@@ -362,6 +384,22 @@ export default function AdminPage() {
 
         {/* Commandes */}
         {tab === 'Commandes' && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex items-center gap-2 bg-surface-800 border border-surface-700 rounded-xl px-3 py-2 flex-1 min-w-48">
+                <Search size={14} className="text-surface-500" />
+                <input className="bg-transparent text-sm text-white placeholder-surface-500 outline-none flex-1" placeholder="Rechercher email ou clé..." value={orderSearch} onChange={e => setOrderSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && adminOrders(1, orderSearch, orderStatus).then(setOrders)} />
+              </div>
+              <select className="input text-sm py-2 w-40" value={orderStatus} onChange={e => { setOrderStatus(e.target.value); adminOrders(1, orderSearch, e.target.value).then(setOrders) }}>
+                <option value="">Tous les statuts</option>
+                <option value="paid">Payé</option>
+                <option value="pending">En attente</option>
+                <option value="refunded">Remboursé</option>
+                <option value="failed">Échoué</option>
+              </select>
+              <button onClick={() => adminOrders(1, orderSearch, orderStatus).then(setOrders)} className="btn-secondary text-xs py-2 px-3 flex items-center gap-1"><Search size={12} /> Rechercher</button>
+              <button onClick={adminExportCSV} className="btn-secondary text-xs py-2 px-3 flex items-center gap-1"><Download size={12} /> Export CSV</button>
+            </div>
           <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -399,6 +437,7 @@ export default function AdminPage() {
               </tbody>
             </table>
             {orders.length === 0 && <p className="text-center text-surface-400 py-8">Aucune commande</p>}
+          </div>
           </div>
         )}
 
