@@ -5,6 +5,8 @@ const {
   ModalBuilder, TextInputBuilder, TextInputStyle
 } = require('discord.js')
 const axios = require('axios')
+const fs = require('fs')
+const path = require('path')
 
 const TOKEN    = process.env.DISCORD_TOKEN
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID
@@ -19,6 +21,8 @@ const CUSTOMER_ROLE_ID       = process.env.DISCORD_CUSTOMER_ROLE_ID || '15180161
 
 const LICENSE_SERVER = process.env.LICENSE_SERVER_URL || 'https://rsm-license-server.fly.dev'
 const LICENSE_SECRET = process.env.LICENSE_ADMIN_SECRET || ''
+
+const CONFIG_FILE = path.join(__dirname, 'welcome_config.json')
 
 const client = new Client({
   intents: [
@@ -59,8 +63,8 @@ async function registerCommands() {
   }
 }
 
-// ── Welcome/Goodbye config ─────────────────────────────────────────────────
-let welcomeConfig = {
+// ── Welcome/Goodbye config (persistée sur disque) ──────────────────────────────
+const DEFAULT_WELCOME = {
   enabled: true,
   title: 'Bienvenue sur le Discord RSM Pro ! 👋',
   description: `Salut {user}! Bienvenue sur le serveur officiel de **Rust Server Manager Pro**.\n\n📋 Consulte **#faq** pour les questions fréquentes\n🎫 Utilise **/ticket** pour ouvrir un ticket de support\n🔑 Utilise **/verify** avec ta clé de licence pour obtenir le rôle vérifié`,
@@ -68,7 +72,7 @@ let welcomeConfig = {
   footer: '',
   thumbnail: true,
 }
-let goodbyeConfig = {
+const DEFAULT_GOODBYE = {
   enabled: false,
   channelId: '',
   title: 'Au revoir 👋',
@@ -76,6 +80,31 @@ let goodbyeConfig = {
   color: '#6b7280',
   footer: '',
 }
+
+let welcomeConfig = { ...DEFAULT_WELCOME }
+let goodbyeConfig = { ...DEFAULT_GOODBYE }
+
+function loadWelcomeConfig() {
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const saved = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'))
+      if (saved.welcome) Object.assign(welcomeConfig, saved.welcome)
+      if (saved.goodbye) Object.assign(goodbyeConfig, saved.goodbye)
+    }
+  } catch (e) {
+    console.error('[Bot] Erreur chargement welcome_config.json:', e.message)
+  }
+}
+
+function saveWelcomeConfig() {
+  try {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify({ welcome: welcomeConfig, goodbye: goodbyeConfig }, null, 2))
+  } catch (e) {
+    console.error('[Bot] Erreur sauvegarde welcome_config.json:', e.message)
+  }
+}
+
+loadWelcomeConfig()
 
 // ── Release checker ────────────────────────────────────────────────────────
 let lastKnownVersion = null
@@ -114,7 +143,6 @@ async function checkNewRelease() {
 // ── Events ─────────────────────────────────────────────────────────────────
 client.once(Events.ClientReady, async () => {
   console.log(`[Bot] Connecté en tant que ${client.user.tag}`)
-  // Force fetch de tous les channels du guild pour remplir le cache
   try {
     const guild = client.guilds.cache.get(GUILD_ID)
     if (guild) await guild.channels.fetch()
@@ -440,7 +468,11 @@ async function sendTicketEmbed(channelId, { title, description, color, footer, i
 }
 
 function getWelcomeConfig() { return { welcome: welcomeConfig, goodbye: goodbyeConfig } }
-function setWelcomeConfig(data) { if (data.welcome) Object.assign(welcomeConfig, data.welcome); if (data.goodbye) Object.assign(goodbyeConfig, data.goodbye) }
+function setWelcomeConfig(data) {
+  if (data.welcome) Object.assign(welcomeConfig, data.welcome)
+  if (data.goodbye) Object.assign(goodbyeConfig, data.goodbye)
+  saveWelcomeConfig()
+}
 
 function getBotDebug() {
   return {
