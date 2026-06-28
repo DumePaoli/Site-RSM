@@ -234,6 +234,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
         if (role) await interaction.member.roles.add(role)
       }
 
+      if (CUSTOMER_ROLE_ID) {
+        const customerRole = interaction.guild.roles.cache.get(CUSTOMER_ROLE_ID)
+        if (customerRole) await interaction.member.roles.add(customerRole)
+      }
+
       const embed = new EmbedBuilder()
         .setTitle('✅ Licence vérifiée')
         .setDescription(`Ta clé **${key}** est valide. Le rôle **Utilisateur vérifié** t'a été attribué.`)
@@ -321,13 +326,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 })
 
-// ── Start ──────────────────────────────────────────────────────────────────
+// ── Start ──────────────────────────────────────────────────────────────────────
 function startBot() {
   if (!TOKEN) { console.warn('[Bot] DISCORD_TOKEN manquant — bot désactivé'); return }
   client.login(TOKEN).catch(e => console.error('[Bot] Erreur login:', e.message))
 }
 
-// ── Bot control API ────────────────────────────────────────────────────────
+// ── Bot control API ───────────────────────────────────────────────────────────────
 function getBotStats() {
   if (!client.isReady()) return { online: false }
   const guild = client.guilds.cache.get(GUILD_ID)
