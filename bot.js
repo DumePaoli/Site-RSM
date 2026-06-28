@@ -138,10 +138,13 @@ async function checkNewRelease() {
 
 // ── Helper: verify a license key and assign roles
 async function verifyLicenseKey(key, member) {
-  const { data } = await axios.get(`${LICENSE_SERVER}/license/${key}`, {
-    headers: { 'X-Admin-Secret': LICENSE_SECRET }
-  })
-  if (!data || data.detail) throw new Error('Clé introuvable')
+  const db = getDb()
+  if (!db) throw new Error('DB non disponible')
+  const order = await db.get(
+    "SELECT license_key FROM orders WHERE license_key = ? AND status = 'paid'",
+    [key]
+  )
+  if (!order) throw new Error('Clé introuvable')
   if (VERIFIED_ROLE_ID) {
     const role = member.guild.roles.cache.get(VERIFIED_ROLE_ID)
     if (role) await member.roles.add(role)
@@ -485,7 +488,7 @@ async function sendVerifyEmbed(channelId, { title, description, color, footer, i
   if (!channel) throw new Error(`Channel ${channelId} introuvable (${guild.channels.cache.size} channels en cache)`)
   const embed = new EmbedBuilder()
     .setDescription(description || 'Clique sur le bouton ci-dessous pour vérifier ta clé de licence et obtenir le rôle Client.')
-    .setColor(parseInt((color || '#c12814').replace('#', ''), 16))
+    .setColor(parseInt((color || '#22c55e').replace('#', ''), 16))
     .setTimestamp()
   if (title) embed.setTitle(title)
   if (footer) embed.setFooter({ text: footer })
