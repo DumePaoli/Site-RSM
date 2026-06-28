@@ -37,41 +37,15 @@ const FEATURES = [
 ]
 
 const REVIEWS = [
-  { author: 'NightWolf_FR',  stars: 5, text: 'Meilleur outil que j\'aie utilisé pour mon serveur Rust. Le Discord bot seul vaut l\'achat. Setup en 10 minutes.' },
+  { author: 'NightWolf_FR',  stars: 5, text: "Meilleur outil que j'aie utilisé pour mon serveur Rust. Le Discord bot seul vaut l'achat. Setup en 10 minutes." },
   { author: 'Kryztalix',     stars: 5, text: 'Enfin une interface graphique propre pour Rust. Plus besoin de taper des commandes à la main. Je recommande 100%.' },
   { author: 'AdminPvP2024',  stars: 5, text: 'La gestion des wipes planifiés est parfaite. Warnings in-game automatiques, tout se fait sans moi.' },
   { author: 'SteelBackpack', stars: 5, text: 'Support très réactif sur Discord. Problème résolu en 20 min. Logiciel stable depuis 3 mois sans crash.' },
-  { author: 'RustFR_Admin',  stars: 5, text: 'J\'ai essayé d\'autres outils, RSM Pro est de loin le plus complet. Les sauvegardes auto m\'ont sauvé 2 fois.' },
-  { author: 'Toxicus_PVP',   stars: 4, text: 'Interface claire, plugins Carbon gérés facilement. Petite courbe d\'apprentissage mais les docs sont bien faites.' },
-]
-
-const FAQS = [
-  { q: 'Sur quel OS fonctionne RSM Pro ?',         a: 'Windows 10 et 11 64-bit uniquement. Exécutable autonome — aucune installation Python ou runtime requise.' },
-  { q: 'Combien de serveurs puis-je gérer ?',       a: 'Autant que vous voulez. RSM Pro supporte la gestion multi-serveurs depuis une seule interface.' },
-  { q: 'Carbon ou Oxide — lequel est supporté ?',   a: 'Les deux. RSM Pro détecte automatiquement votre framework et adapte les chemins en conséquence.' },
-  { q: 'Ma licence est valable combien de temps ?', a: 'Les plans 1m/3m expirent à la date indiquée. Le plan À Vie vous donne accès pour toujours, mises à jour incluses.' },
-  { q: 'Comment activer ma licence ?',              a: 'Après achat vous recevez un email avec votre clé RSM-XXXX-XXXX-XXXX. Entrez-la dans l\'onglet Licence de l\'app.' },
-  { q: 'Puis-je transférer ma licence ?',           a: 'Oui. Désactivez la licence depuis l\'app sur votre machine actuelle, puis activez-la sur la nouvelle.' },
-  { q: 'Support inclus ?',                          a: 'Oui, support Discord inclus dans tous les plans. Réponse généralement sous 24h.' },
+  { author: 'RustFR_Admin',  stars: 5, text: "J'ai essayé d'autres outils, RSM Pro est de loin le plus complet. Les sauvegardes auto m'ont sauvé 2 fois." },
+  { author: 'Toxicus_PVP',   stars: 4, text: "Interface claire, plugins Carbon gérés facilement. Petite courbe d'apprentissage mais les docs sont bien faites." },
 ]
 
 /* ──────────────────────────────── COMPONENTS ─────────────────────────────── */
-
-function AppWindow({ title, children, accent = 'bg-rust-500' }) {
-  return (
-    <div className="rounded-xl overflow-hidden border border-white/10 bg-[#111316] shadow-2xl">
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#0d0f11] border-b border-white/5">
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
-        </div>
-        <span className="text-[10px] text-surface-500 ml-1 font-mono">{title}</span>
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  )
-}
 
 function FeatureCard({ feature, active, onClick }) {
   return (
@@ -111,16 +85,7 @@ export default function HomePage() {
   const { lang } = useLang()
   const [products, setProducts] = useState([])
   const [activeFeature, setActiveFeature] = useState(0)
-  const [version, setVersion] = useState('v1.1.52')
   const [lightbox, setLightbox] = useState(null)
-
-  useEffect(() => {
-    const base = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-    fetch(`${base}/api/version`)
-      .then(r => r.json())
-      .then(d => { if (d.version) setVersion(d.version) })
-      .catch(() => {})
-  }, [])
 
   useEffect(() => {
     getProducts().then(setProducts).catch(() => setProducts([
@@ -162,11 +127,6 @@ export default function HomePage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-rust-500/[0.07] rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-6xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs text-surface-400 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            {t('hero.badge', lang).replace('{version}', version)}
-          </div>
-
           <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[1.05] mb-6">
             {t('hero.title1', lang)}<br />
             <span className="text-rust-500">{t('hero.title2', lang)}</span>
@@ -374,6 +334,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── LIGHTBOX ─────────────────────────────────────────────────────── */}
       {lightbox && (
         <div
