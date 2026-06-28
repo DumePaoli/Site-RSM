@@ -136,6 +136,22 @@ async function checkNewRelease() {
   } catch {}
 }
 
+// ── Helper: verify a license key and assign roles
+async function verifyLicenseKey(key, member) {
+  const { data } = await axios.get(`${LICENSE_SERVER}/license/${key}`, {
+    headers: { 'X-Admin-Secret': LICENSE_SECRET }
+  })
+  if (!data || data.detail) throw new Error('Clé introuvable')
+  if (VERIFIED_ROLE_ID) {
+    const role = member.guild.roles.cache.get(VERIFIED_ROLE_ID)
+    if (role) await member.roles.add(role)
+  }
+  if (CUSTOMER_ROLE_ID) {
+    const customerRole = member.guild.roles.cache.get(CUSTOMER_ROLE_ID)
+    if (customerRole) await member.roles.add(customerRole)
+  }
+}
+
 // ── Events
 client.once(Events.ClientReady, async () => {
   console.log(`[Bot] Connecté en tant que ${client.user.tag}`)
@@ -153,15 +169,13 @@ client.on(Events.GuildMemberAdd, async (member) => {
   if (!welcomeConfig.enabled) return
   const db = getDb()
 
-  // Dedup: INSERT IGNORE — si la ligne existe déjà (autre instance), on skip
   if (db) {
     try {
       const result = await db.run(
         'INSERT IGNORE INTO discord_welcomes (discord_id, sent_at) VALUES (?, NOW())',
         [member.id]
       )
-      if (result.affectedRows === 0) return // déjà envoyé par une autre instance
-      // Nettoyer les entrées de plus de 60s pour ne pas bloquer les rejoins futurs
+      if (result.affectedRows === 0) return
       await db.run("DELETE FROM discord_welcomes WHERE sent_at < NOW() - INTERVAL 60 SECOND").catch(() => {})
     } catch (e) {
       console.error('[Bot] Erreur dedup welcome:', e.message)
@@ -248,18 +262,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return interaction.editReply('❌ Format invalide. La clé doit être `RSM-XXXX-XXXX-XXXX`.')
     }
     try {
-      const { data } = await axios.get(`${LICENSE_SERVER}/license/${key}`, {
-        headers: { 'X-Admin-Secret': LICENSE_SECRET }
-      })
-      if (!data || data.detail) return interaction.editReply('❌ Clé de licence introuvable ou invalide.')
-      if (VERIFIED_ROLE_ID) {
-        const role = interaction.guild.roles.cache.get(VERIFIED_ROLE_ID)
-        if (role) await interaction.member.roles.add(role)
-      }
-      if (CUSTOMER_ROLE_ID) {
-        const customerRole = interaction.guild.roles.cache.get(CUSTOMER_ROLE_ID)
-        if (customerRole) await interaction.member.roles.add(customerRole)
-      }
+      await verifyLicenseKey(key, interaction.member)
       const embed = new EmbedBuilder()
         .setTitle('✅ Licence vérifiée')
         .setDescription(`Ta clé **${key}** est valide. Le rôle **Utilisateur vérifié** t'a été attribué.`)
@@ -288,6 +291,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
       .setPlaceholder('Ex: Problème de connexion, question sur une fonctionnalité...')
       .setRequired(true).setMaxLength(500)
     modal.addComponents(new ActionRowBuilder().addComponents(sujetInput))
+    await interaction.showModal(modal)
+  }
+
+  // ── Bouton vérifier licence
+  if (interaction.isButton() && interaction.customId === 'verify_key') {
+    const modal = new ModalBuilder().setCustomId('verify_modal').setTitle('Vérifier ma licence RSM Pro')
+    const keyInput = new TextInputBuilder()
+      .setCustomId('verify_key_input')
+      .setLabel('Clé de licence')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('RSM-XXXX-XXXX-XXXX')
+      .setRequired(true)
+      .setMinLength(16)
+      .setMaxLength(20)
+    modal.addComponents(new ActionRowBuilder().addComponents(keyInput))
     await interaction.showModal(modal)
   }
 
@@ -323,6 +341,26 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await interaction.editReply({ content: `Ticket créé: ${channel}` })
     } catch(e) {
       await interaction.editReply({ content: `❌ Erreur: ${e.message}` }).catch(() => {})
+    }
+  }
+
+  // ── Modal vérification licence soumis
+  if (interaction.isModalSubmit() && interaction.customId === 'verify_modal') {
+    await interaction.deferReply({ ephemeral: true })
+    const key = interaction.fields.getTextInputValue('verify_key_input').trim().toUpperCase()
+    if (!key.match(/^RSM-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/)) {
+      return interaction.editReply('❌ Format invalide. La clé doit être au format `RSM-XXXX-XXXX-XXXX`.')
+    }
+    try {
+      await verifyLicenseKey(key, interaction.member)
+      const embed = new EmbedBuilder()
+        .setTitle('✅ Licence vérifiée !')
+        .setDescription(`Ta clé **${key}** est valide.\nLe rôle **Client vérifié** t'a été attribué.`)
+        .setColor(0x22c55e)
+        .setTimestamp()
+      await interaction.editReply({ embeds: [embed] })
+    } catch {
+      await interaction.editReply('❌ Clé introuvable ou invalide. Vérifie ta clé dans ton espace client sur **rustservermanagerpro.com**.')
     }
   }
 
@@ -439,6 +477,26 @@ async function sendTicketEmbed(channelId, { title, description, color, footer, i
   await channel.send({ embeds: [embed], components: [row] })
 }
 
+async function sendVerifyEmbed(channelId, { title, description, color, footer, image, thumbnail }) {
+  const guild = client.guilds.cache.get(GUILD_ID)
+  if (!guild) throw new Error('Guild introuvable')
+  await guild.channels.fetch().catch(() => {})
+  const channel = guild.channels.cache.get(channelId)
+  if (!channel) throw new Error(`Channel ${channelId} introuvable (${guild.channels.cache.size} channels en cache)`)
+  const embed = new EmbedBuilder()
+    .setDescription(description || 'Clique sur le bouton ci-dessous pour vérifier ta clé de licence et obtenir le rôle Client.')
+    .setColor(parseInt((color || '#c12814').replace('#', ''), 16))
+    .setTimestamp()
+  if (title) embed.setTitle(title)
+  if (footer) embed.setFooter({ text: footer })
+  if (image) embed.setImage(image)
+  if (thumbnail) embed.setThumbnail(thumbnail)
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('verify_key').setLabel('Vérifier ma licence').setStyle(ButtonStyle.Success).setEmoji('🔑')
+  )
+  await channel.send({ embeds: [embed], components: [row] })
+}
+
 function getWelcomeConfig() { return { welcome: welcomeConfig, goodbye: goodbyeConfig } }
 function setWelcomeConfig(data) {
   if (data.welcome) Object.assign(welcomeConfig, data.welcome)
@@ -469,4 +527,4 @@ async function assignCustomerRole(discordId) {
   await member.roles.add(role)
 }
 
-module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getBotDebug, getWelcomeConfig, setWelcomeConfig, assignCustomerRole }
+module.exports = { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, sendVerifyEmbed, triggerReleaseAnnounce, getBotDebug, getWelcomeConfig, setWelcomeConfig, assignCustomerRole }
