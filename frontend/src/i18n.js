@@ -17,10 +17,10 @@ const translations = {
     'hero.sub':       'RSM Pro centralise tout ce qu\'un administrateur fait manuellement — démarrage, RCON, wipes planifiés, sauvegardes et bot Discord — dans une interface Windows native. Aucune ligne de commande requise.',
     'hero.cta.buy':   'Obtenir RSM Pro',
     'hero.cta.feat':  'Voir les fonctionnalités',
-    'hero.stat1.v':   '500+',
-    'hero.stat1.l':   'Serveurs actifs',
-    'hero.stat2.v':   '3 ans',
-    'hero.stat2.l':   'de développement actif',
+    'hero.stat1.v':   'Windows',
+    'hero.stat1.l':   'Application native',
+    'hero.stat2.v':   'Carbon & Oxide',
+    'hero.stat2.l':   'Frameworks supportés',
     'hero.stat3.v':   '< 24h',
     'hero.stat3.l':   'Temps de réponse support',
 
@@ -98,9 +98,9 @@ const translations = {
     'faq.a7': 'Oui. Le support via Discord est inclus dans chaque plan, sans supplément. Le délai de réponse habituel est inférieur à 24 heures.',
 
     // CTA
-    'cta.title1':     'Votre serveur ne dort jamais.',
-    'cta.title2':     'Vous, si.',
-    'cta.sub':        'Rejoignez plus de 500 administrateurs qui ont automatisé la gestion de leur serveur Rust avec RSM Pro.',
+    'cta.title1':     'Un seul outil.',
+    'cta.title2':     'Tout sous contrôle.',
+    'cta.sub':        'Démarrage, RCON, wipes, sauvegardes, Discord — tout centralisé dans une interface Windows conçue pour les admins sérieux.',
     'cta.buy':        'Obtenir RSM Pro',
     'cta.download':   'Télécharger',
 
@@ -181,10 +181,10 @@ const translations = {
     'hero.sub':       'RSM Pro centralises everything a server admin does manually — startup, RCON, scheduled wipes, backups and Discord bot — into a native Windows interface. No command line required.',
     'hero.cta.buy':   'Get RSM Pro',
     'hero.cta.feat':  'See features',
-    'hero.stat1.v':   '500+',
-    'hero.stat1.l':   'Active servers',
-    'hero.stat2.v':   '3 years',
-    'hero.stat2.l':   'of active development',
+    'hero.stat1.v':   'Windows',
+    'hero.stat1.l':   'Native application',
+    'hero.stat2.v':   'Carbon & Oxide',
+    'hero.stat2.l':   'Supported frameworks',
     'hero.stat3.v':   '< 24h',
     'hero.stat3.l':   'Support response time',
 
@@ -262,9 +262,9 @@ const translations = {
     'faq.a7': 'Yes. Discord support is included in every plan at no extra cost. Typical response time is under 24 hours.',
 
     // CTA
-    'cta.title1':     'Your server never sleeps.',
-    'cta.title2':     'Now you can.',
-    'cta.sub':        'Join over 500 admins who have automated their Rust server management with RSM Pro.',
+    'cta.title1':     'One tool.',
+    'cta.title2':     'Full control.',
+    'cta.sub':        'Startup, RCON, wipes, backups, Discord — everything centralised in a Windows interface built for serious admins.',
     'cta.buy':        'Get RSM Pro',
     'cta.download':   'Download',
 
