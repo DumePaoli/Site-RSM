@@ -11,7 +11,7 @@ const getStripe = () => { if (!_stripe && process.env.STRIPE_SECRET_KEY) _stripe
 const nodemailer = require('nodemailer')
 const axios      = require('axios')
 const { db, init } = require('./db')
-const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getWelcomeConfig, setWelcomeConfig } = require('./bot')
+const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, sendVerifyEmbed, triggerReleaseAnnounce, getWelcomeConfig, setWelcomeConfig } = require('./bot')
 
 const app  = express()
 const PORT = process.env.PORT || 3000
@@ -196,16 +196,17 @@ app.post('/api/admin/login', (req, res) => {
 })
 
 // ── Products
+const RSM_RELEASES_REPO = process.env.RSM_RELEASES_REPO || 'DumePaoli/RSM-Releases'
 let _versionCache = { value: process.env.APP_VERSION || 'v1.1.52', at: 0 }
 async function fetchLatestVersion() {
-  const r = await axios.get('https://api.github.com/repos/DumePaoli/RSM-Releases/releases/latest', { headers: { 'User-Agent': 'RSM-Site' } })
+  const r = await axios.get(`https://api.github.com/repos/${RSM_RELEASES_REPO}/releases/latest`, { headers: { 'User-Agent': 'RSM-Site' }, timeout: 10000 })
   if (r.data.tag_name) _versionCache = { value: r.data.tag_name, at: Date.now() }
 }
 
 app.get('/api/version', async (req, res) => {
-  const TTL = 300_000 // 5 minutes
+  const TTL = 300_000
   if (Date.now() - _versionCache.at < TTL) return res.json({ version: _versionCache.value })
-  try { await fetchLatestVersion() } catch {}
+  try { await fetchLatestVersion() } catch (e) { console.error('[version]', e.message) }
   res.json({ version: _versionCache.value })
 })
 
@@ -328,7 +329,6 @@ const DISCORD_CLIENT_ID     = process.env.DISCORD_OAUTH_CLIENT_ID || '1512458990
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_OAUTH_CLIENT_SECRET || 'mPB_0wD_2iP9Ud_z9nLmvzoEJD1jLgox'
 const DISCORD_REDIRECT_URI  = process.env.DISCORD_OAUTH_REDIRECT || 'https://rustservermanagerpro.com/api/auth/discord/callback'
 
-// Stockage temporaire des états OAuth (token JWT → state)
 const oauthStates = new Map()
 
 app.get('/api/auth/discord', (req, res) => {
@@ -338,7 +338,7 @@ app.get('/api/auth/discord', (req, res) => {
   try { customerId = jwt.verify(token, JWT_SECRET).sub } catch { return res.status(401).json({ detail: 'Token invalide' }) }
   const state = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
   oauthStates.set(state, customerId)
-  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000) // expire après 10 min
+  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000)
   const url = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${state}`
   res.redirect(url)
 })
@@ -390,6 +390,16 @@ app.post('/api/me/resend-key/:id', authMiddleware, async (req, res) => {
     const o = await db.get('SELECT o.*, p.name as product_name FROM orders o JOIN products p ON p.id = o.product_id WHERE o.id = ? AND o.customer_id = ?', [req.params.id, req.user.sub])
     if (!o || o.status !== 'paid') return res.status(404).json({ detail: 'Introuvable' })
     sendDeliveryEmail(o.email, o.license_key, o.product_name)
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+// ── License HWID registration (no auth — called by RSM app)
+app.post('/api/license/register-hwid', async (req, res) => {
+  try {
+    const { license_key, hwid } = req.body
+    if (!license_key || !hwid) return res.status(400).json({ detail: 'license_key et hwid requis' })
+    await db.run('UPDATE orders SET hwid = ? WHERE license_key = ?', [hwid, license_key])
     res.json({ ok: true })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -460,16 +470,6 @@ app.delete('/api/admin/orders/:id', adminMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-app.delete('/api/admin/orders/:id', adminMiddleware, async (req, res) => {
-  try {
-    const o = await db.get('SELECT * FROM orders WHERE id = ?', [req.params.id])
-    if (!o) return res.status(404).json({ detail: 'Introuvable' })
-    if (o.license_key) await axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${o.license_key}`, { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET } }).catch(() => {})
-    await db.run('DELETE FROM orders WHERE id = ?', [o.id])
-    res.json({ ok: true })
-  } catch(e) { res.status(500).json({ detail: e.message }) }
-})
-
 app.get('/api/admin/customers', adminMiddleware, async (req, res) => {
   try { res.json(await db.all('SELECT id, email, name, banned, created_at FROM customers ORDER BY created_at DESC')) }
   catch(e) { res.status(500).json({ detail: e.message }) }
@@ -479,7 +479,6 @@ app.post('/api/admin/customers/:id/ban', adminMiddleware, async (req, res) => {
   try {
     const c = await db.get('SELECT email FROM customers WHERE id=?', [req.params.id])
     await db.run('UPDATE customers SET banned=1 WHERE id=?', [req.params.id])
-    // Revoke all active licenses
     const orders = await db.all("SELECT license_key FROM orders WHERE customer_id=? AND status='paid' AND license_key != ''", [req.params.id])
     for (const o of orders) {
       axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${o.license_key}`, { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET } }).catch(() => {})
@@ -562,7 +561,7 @@ app.get('/api/admin/logs', adminMiddleware, async (req, res) => {
 
 app.get('/api/releases', async (req, res) => {
   try {
-    const r = await axios.get('https://api.github.com/repos/DumePaoli/RSM-Releases/releases', { headers: { 'User-Agent': 'RSM-Site' }, timeout: 8000 })
+    const r = await axios.get(`https://api.github.com/repos/${RSM_RELEASES_REPO}/releases`, { headers: { 'User-Agent': 'RSM-Site' }, timeout: 8000 })
     res.json(r.data.slice(0, 10).map(rel => ({ tag: rel.tag_name, name: rel.name || rel.tag_name, body: rel.body || '', published_at: rel.published_at, url: rel.html_url })))
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -579,7 +578,7 @@ app.delete('/api/admin/manual-licenses/:key', adminMiddleware, async (req, res) 
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-// ── Bot control routes ──────────────────────────────────────────────────────
+// ── Bot control routes
 app.get('/api/admin/bot/stats', adminMiddleware, (req, res) => {
   try { res.json(getBotStats()) }
   catch(e) { res.status(500).json({ detail: e.message }) }
@@ -614,6 +613,15 @@ app.post('/api/admin/bot/send-ticket-embed', adminMiddleware, async (req, res) =
     const { channelId, title, description, color, footer, image, thumbnail } = req.body
     if (!channelId) return res.status(400).json({ detail: 'channelId requis' })
     await sendTicketEmbed(channelId, { title, description, color, footer, image, thumbnail })
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.post('/api/admin/bot/send-verify-embed', adminMiddleware, async (req, res) => {
+  try {
+    const { channelId, title, description, color, footer, image, thumbnail } = req.body
+    if (!channelId) return res.status(400).json({ detail: 'channelId requis' })
+    await sendVerifyEmbed(channelId, { title, description, color, footer, image, thumbnail })
     res.json({ ok: true })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -711,7 +719,6 @@ app.post('/api/admin/bot/welcome-config', adminMiddleware, (req, res) => {
   catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-// Public status endpoint
 app.get('/api/status', async (req, res) => {
   const botStats = getBotStats()
   let licenseOk = false
@@ -739,7 +746,6 @@ app.get("/download", (req, res) => {
   res.redirect(302, url)
 })
 
-
 app.use(express.static(path.join(__dirname, 'frontend', 'dist')))
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html')))
 
@@ -764,8 +770,7 @@ async function checkExpiringLicenses() {
 
 init().then(() => {
   app.listen(PORT, () => console.log(`RSM Shop running on port ${PORT}`))
-  startBot()
-  // Vérification des licences expirant dans 3 jours — toutes les 24h
+  startBot(db)
   setInterval(checkExpiringLicenses, 24 * 60 * 60 * 1000)
   setTimeout(checkExpiringLicenses, 5000)
 }).catch(e => {

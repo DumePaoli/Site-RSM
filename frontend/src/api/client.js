@@ -56,6 +56,7 @@ export const adminBotChannels = () => api.get('/api/admin/bot/channels').then(r 
 export const adminBotTickets = () => api.get('/api/admin/bot/tickets').then(r => r.data)
 export const adminBotCloseTicket = (id) => api.delete(`/api/admin/bot/tickets/${id}`).then(r => r.data)
 export const adminBotSendEmbed = (d) => api.post('/api/admin/bot/send-embed', d).then(r => r.data)
+export const adminBotSendVerifyEmbed = (d) => api.post('/api/admin/bot/send-verify-embed', d).then(r => r.data)
 export const adminBotAnnounceRelease = (d) => api.post('/api/admin/bot/announce-release', d).then(r => r.data)
 export const adminBotDebug = () => api.get('/api/admin/bot/debug').then(r => r.data)
 export const adminHwids = () => api.get('/api/admin/hwids').then(r => r.data)
