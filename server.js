@@ -11,7 +11,7 @@ const getStripe = () => { if (!_stripe && process.env.STRIPE_SECRET_KEY) _stripe
 const nodemailer = require('nodemailer')
 const axios      = require('axios')
 const { db, init } = require('./db')
-const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, triggerReleaseAnnounce, getWelcomeConfig, setWelcomeConfig } = require('./bot')
+const { startBot, getBotStats, getTextChannels, getOpenTickets, closeTicket, sendEmbed, sendTicketEmbed, sendVerifyEmbed, triggerReleaseAnnounce, getWelcomeConfig, setWelcomeConfig } = require('./bot')
 
 const app  = express()
 const PORT = process.env.PORT || 3000
@@ -195,16 +195,17 @@ app.post('/api/admin/login', (req, res) => {
 })
 
 // ── Products
+const RSM_RELEASES_REPO = process.env.RSM_RELEASES_REPO || 'DumePaoli/RSM-Releases'
 let _versionCache = { value: process.env.APP_VERSION || 'v1.1.52', at: 0 }
 async function fetchLatestVersion() {
-  const r = await axios.get('https://api.github.com/repos/DumePaoli/RSM-Releases/releases/latest', { headers: { 'User-Agent': 'RSM-Site' } })
+  const r = await axios.get(`https://api.github.com/repos/${RSM_RELEASES_REPO}/releases/latest`, { headers: { 'User-Agent': 'RSM-Site' }, timeout: 10000 })
   if (r.data.tag_name) _versionCache = { value: r.data.tag_name, at: Date.now() }
 }
 
 app.get('/api/version', async (req, res) => {
   const TTL = 300_000
   if (Date.now() - _versionCache.at < TTL) return res.json({ version: _versionCache.value })
-  try { await fetchLatestVersion() } catch {}
+  try { await fetchLatestVersion() } catch (e) { console.error('[version]', e.message) }
   res.json({ version: _versionCache.value })
 })
 
@@ -555,7 +556,7 @@ app.get('/api/admin/logs', adminMiddleware, async (req, res) => {
 
 app.get('/api/releases', async (req, res) => {
   try {
-    const r = await axios.get('https://api.github.com/repos/DumePaoli/RSM-Releases/releases', { headers: { 'User-Agent': 'RSM-Site' }, timeout: 8000 })
+    const r = await axios.get(`https://api.github.com/repos/${RSM_RELEASES_REPO}/releases`, { headers: { 'User-Agent': 'RSM-Site' }, timeout: 8000 })
     res.json(r.data.slice(0, 10).map(rel => ({ tag: rel.tag_name, name: rel.name || rel.tag_name, body: rel.body || '', published_at: rel.published_at, url: rel.html_url })))
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -607,6 +608,15 @@ app.post('/api/admin/bot/send-ticket-embed', adminMiddleware, async (req, res) =
     const { channelId, title, description, color, footer, image, thumbnail } = req.body
     if (!channelId) return res.status(400).json({ detail: 'channelId requis' })
     await sendTicketEmbed(channelId, { title, description, color, footer, image, thumbnail })
+    res.json({ ok: true })
+  } catch(e) { res.status(500).json({ detail: e.message }) }
+})
+
+app.post('/api/admin/bot/send-verify-embed', adminMiddleware, async (req, res) => {
+  try {
+    const { channelId, title, description, color, footer, image, thumbnail } = req.body
+    if (!channelId) return res.status(400).json({ detail: 'channelId requis' })
+    await sendVerifyEmbed(channelId, { title, description, color, footer, image, thumbnail })
     res.json({ ok: true })
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
@@ -682,7 +692,6 @@ app.delete('/api/admin/keys/:key/activations', adminMiddleware, async (req, res)
   }
 })
 
-// Supprime la clé entière du license server (pas juste les activations)
 app.delete('/api/admin/keys/:key', adminMiddleware, async (req, res) => {
   try {
     const key = req.params.key
