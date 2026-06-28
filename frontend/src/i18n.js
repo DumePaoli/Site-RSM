@@ -98,8 +98,8 @@ const translations = {
     'faq.a7': 'Oui. Le support via Discord est inclus dans chaque plan, sans supplément. Le délai de réponse habituel est inférieur à 24 heures.',
 
     // CTA
-    'cta.title1':     'Votre serveur mérite',
-    'cta.title2':     'mieux que ça.',
+    'cta.title1':     'Votre serveur ne dort jamais.',
+    'cta.title2':     'Vous, si.',
     'cta.sub':        'Rejoignez plus de 500 administrateurs qui ont automatisé la gestion de leur serveur Rust avec RSM Pro.',
     'cta.buy':        'Obtenir RSM Pro',
     'cta.download':   'Télécharger',
@@ -262,8 +262,8 @@ const translations = {
     'faq.a7': 'Yes. Discord support is included in every plan at no extra cost. Typical response time is under 24 hours.',
 
     // CTA
-    'cta.title1':     'Your server deserves',
-    'cta.title2':     'better.',
+    'cta.title1':     'Your server never sleeps.',
+    'cta.title2':     'Now you can.',
     'cta.sub':        'Join over 500 admins who have automated their Rust server management with RSM Pro.',
     'cta.buy':        'Get RSM Pro',
     'cta.download':   'Download',
