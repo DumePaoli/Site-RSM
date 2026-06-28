@@ -682,11 +682,12 @@ app.delete('/api/admin/keys/:key/activations', adminMiddleware, async (req, res)
   }
 })
 
+// Supprime la clé entière du license server (pas juste les activations)
 app.delete('/api/admin/keys/:key', adminMiddleware, async (req, res) => {
   try {
     const key = req.params.key
     await axios.delete(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/activations`,
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}`,
       { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
     )
     await db.run("UPDATE orders SET status='revoked' WHERE license_key = ?", [key])
