@@ -116,6 +116,7 @@ const loginLimiter = rateLimit({
   }
 })
 const checkoutLimiter = rateLimit({ windowMs: 60 * 1000, max: 5, message: { detail: 'Trop de requêtes, réessaie dans une minute.' } })
+const passwordResetLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: { detail: 'Trop de tentatives, réessaie dans une heure.' } })
 
 async function fulfillOrder(orderId) {
   const order = await db.get('SELECT * FROM orders WHERE id = ?', [orderId])
@@ -160,7 +161,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-app.post('/api/auth/forgot-password', async (req, res) => {
+app.post('/api/auth/forgot-password', passwordResetLimiter, async (req, res) => {
   try {
     const { email } = req.body
     const customer = await db.get('SELECT id FROM customers WHERE email = ?', [email?.toLowerCase()])
@@ -175,7 +176,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-app.post('/api/auth/reset-password', async (req, res) => {
+app.post('/api/auth/reset-password', passwordResetLimiter, async (req, res) => {
   try {
     const { token, password } = req.body
     if (!token || !password || password.length < 6) return res.status(400).json({ detail: 'Données invalides (6 caractères minimum)' })
@@ -551,7 +552,11 @@ app.get('/api/admin/manual-licenses', adminMiddleware, async (req, res) => {
 })
 
 app.get('/api/admin/logs', adminMiddleware, async (req, res) => {
-  try { res.json(await db.all('SELECT * FROM admin_logs ORDER BY created_at DESC LIMIT 500')) }
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 200, 500)
+    const offset = parseInt(req.query.offset) || 0
+    res.json(await db.all('SELECT * FROM admin_logs ORDER BY created_at DESC LIMIT ? OFFSET ?', [limit, offset]))
+  }
   catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
