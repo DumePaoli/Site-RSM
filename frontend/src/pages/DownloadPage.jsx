@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Download, RefreshCw, Tag, ExternalLink } from 'lucide-react'
 import { getReleases } from '../api/client'
 
-const DOWNLOAD_BASE = 'https://github.com/DumePaoli/Rust-Server-Manger2/releases/download'
+const DOWNLOAD_BASE = 'https://github.com/DumePaoli/RSM-Releases/releases/download'
 const EXE_NAME = 'Rust.Server.Manager.Pro.exe'
 
 export default function DownloadPage() {
