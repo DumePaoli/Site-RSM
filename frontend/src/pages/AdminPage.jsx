@@ -9,6 +9,7 @@ import {
   adminBotStats, adminBotChannels, adminBotTickets,
   adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease,
   adminBotSendTicketEmbed, adminBotGetWelcomeConfig, adminBotSetWelcomeConfig,
+  adminBotSendVerifyEmbed,
   adminExportCSV
 } from '../api/client'
 import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw, Bot, Hash, Shield, Ticket, Send, Megaphone, X, Download, Search, TrendingUp, ClipboardList, Edit2, Check } from 'lucide-react'
@@ -29,7 +30,7 @@ const LIC_DURATIONS = [
   { value: '2592000', label: '30 jours' },
   { value: '7776000', label: '90 jours' },
 ]
-const BOT_TABS = ['Stats', 'Embed', 'Ticket Embed', 'Tickets', 'Bienvenue', 'Release']
+const BOT_TABS = ['Stats', 'Embed', 'Ticket Embed', 'Verify Embed', 'Tickets', 'Bienvenue', 'Release']
 const PRESET_COLORS = [
   { label: 'Rouge RSM', value: '#c12814' },
   { label: 'Vert', value: '#22c55e' },
@@ -102,6 +103,17 @@ export default function AdminPage() {
   const [ticketSending, setTicketSending] = useState(false)
   const [ticketOk, setTicketOk] = useState(false)
   const [ticketErr, setTicketErr] = useState('')
+  // Verify Embed state
+  const [verifyChannel, setVerifyChannel] = useState('')
+  const [verifyTitle, setVerifyTitle] = useState('Vérifier ma licence RSM Pro')
+  const [verifyDesc, setVerifyDesc] = useState('Tu as une clé de licence RSM Pro ? Clique sur le bouton ci-dessous pour la vérifier et obtenir ton rôle Client vérifié.')
+  const [verifyColor, setVerifyColor] = useState('#22c55e')
+  const [verifyFooter, setVerifyFooter] = useState('RSM Pro — Vérification')
+  const [verifyImage, setVerifyImage] = useState('')
+  const [verifyThumbnail, setVerifyThumbnail] = useState('')
+  const [verifySending, setVerifySending] = useState(false)
+  const [verifyOk, setVerifyOk] = useState(false)
+  const [verifyErr, setVerifyErr] = useState('')
   const [announceLoading, setAnnounceLoading] = useState(false)
   const [announceOk, setAnnounceOk] = useState(false)
   const [announceErr, setAnnounceErr] = useState('')
@@ -283,6 +295,16 @@ export default function AdminPage() {
       setTicketOk(true); setTimeout(() => setTicketOk(false), 3000)
     } catch(e) { setTicketErr(e.response?.data?.detail || 'Erreur') }
     setTicketSending(false)
+  }
+
+  const handleSendVerifyEmbed = async (e) => {
+    e.preventDefault()
+    setVerifySending(true); setVerifyOk(false); setVerifyErr('')
+    try {
+      await adminBotSendVerifyEmbed({ channelId: verifyChannel, title: verifyTitle, description: verifyDesc, color: verifyColor, footer: verifyFooter, image: verifyImage, thumbnail: verifyThumbnail })
+      setVerifyOk(true); setTimeout(() => setVerifyOk(false), 3000)
+    } catch(e) { setVerifyErr(e.response?.data?.detail || 'Erreur') }
+    setVerifySending(false)
   }
 
   const handleCloseTicket = async (id) => {
@@ -738,7 +760,7 @@ export default function AdminPage() {
             </div>
 
             {/* Bot sub-tabs */}
-            <div className="flex gap-1 border-b border-white/5">
+            <div className="flex gap-1 border-b border-white/5 flex-wrap">
               {BOT_TABS.map(t => (
                 <button key={t} onClick={() => setBotTab(t)}
                   className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${botTab === t ? 'border-rust-500 text-white' : 'border-transparent text-surface-500 hover:text-white'}`}>
@@ -907,6 +929,63 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <span className="inline-flex items-center gap-1.5 bg-[#5865f2] text-white text-xs font-medium px-3 py-1.5 rounded">🎫 Ouvrir un ticket</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Verify Embed */}
+            {botTab === 'Verify Embed' && (
+              <div className="grid md:grid-cols-2 gap-6">
+                <form onSubmit={handleSendVerifyEmbed} className="card p-6 space-y-4">
+                  <h2 className="text-white font-semibold flex items-center gap-2"><Key size={16} /> Embed vérification de licence</h2>
+                  <div>
+                    <label className="label">Channel</label>
+                    <select value={verifyChannel} onChange={e => setVerifyChannel(e.target.value)} className="input w-full" required>
+                      <option value="">Sélectionner un channel</option>
+                      {channels.map(c => <option key={c.id} value={c.id}>#{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div><label className="label">Titre</label><input value={verifyTitle} onChange={e => setVerifyTitle(e.target.value)} className="input w-full" /></div>
+                  <div><label className="label">Description</label><textarea value={verifyDesc} onChange={e => setVerifyDesc(e.target.value)} className="input w-full h-24 resize-none" /></div>
+                  <div>
+                    <label className="label">Couleur</label>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {PRESET_COLORS.map(p => (
+                        <button key={p.value} type="button" onClick={() => setVerifyColor(p.value)}
+                          className={`w-7 h-7 rounded-full border-2 transition-all ${verifyColor === p.value ? 'border-white scale-110' : 'border-transparent'}`}
+                          style={{ background: p.value }} />
+                      ))}
+                      <input type="color" value={verifyColor} onChange={e => setVerifyColor(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+                    </div>
+                  </div>
+                  <div><label className="label">Footer (optionnel)</label><input value={verifyFooter} onChange={e => setVerifyFooter(e.target.value)} className="input w-full" /></div>
+                  <div><label className="label">Image — URL (optionnel)</label><input value={verifyImage} onChange={e => setVerifyImage(e.target.value)} className="input w-full" placeholder="https://..." /></div>
+                  <div><label className="label">Miniature — URL (optionnel)</label><input value={verifyThumbnail} onChange={e => setVerifyThumbnail(e.target.value)} className="input w-full" placeholder="https://..." /></div>
+                  {verifyErr && <p className="text-red-400 text-sm">{verifyErr}</p>}
+                  {verifyOk && <p className="text-green-400 text-sm flex items-center gap-1"><CheckCircle2 size={14} /> Embed envoyé !</p>}
+                  <button className="btn-primary w-full flex items-center justify-center gap-2" disabled={verifySending}>
+                    <Send size={14} /> {verifySending ? 'Envoi...' : 'Envoyer'}
+                  </button>
+                </form>
+                <div className="space-y-3">
+                  <p className="text-surface-500 text-xs uppercase tracking-wide">Aperçu</p>
+                  <div className="bg-[#1e1f22] rounded-lg p-4 space-y-3">
+                    <div className="flex gap-3">
+                      <div className="w-1 rounded-full flex-shrink-0" style={{ background: verifyColor }} />
+                      <div className="flex-1 space-y-1">
+                        <div className="flex justify-between gap-3">
+                          <div className="flex-1">
+                            {verifyTitle && <p className="text-white font-semibold text-sm">{verifyTitle}</p>}
+                            <p className="text-[#dbdee1] text-sm whitespace-pre-wrap">{verifyDesc}</p>
+                          </div>
+                          {verifyThumbnail && <img src={verifyThumbnail} alt="" className="w-16 h-16 rounded object-cover flex-shrink-0" onError={e => e.target.style.display='none'} />}
+                        </div>
+                        {verifyImage && <img src={verifyImage} alt="" className="w-full rounded max-h-48 object-cover" onError={e => e.target.style.display='none'} />}
+                        {verifyFooter && <p className="text-[#949ba4] text-xs mt-2 pt-2 border-t border-white/5">{verifyFooter}</p>}
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 bg-[#57f287] text-black text-xs font-medium px-3 py-1.5 rounded">🔑 Vérifier ma licence</span>
                   </div>
                 </div>
               </div>
