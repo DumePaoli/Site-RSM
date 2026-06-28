@@ -10,10 +10,9 @@ import {
   adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease,
   adminBotSendTicketEmbed, adminBotGetWelcomeConfig, adminBotSetWelcomeConfig,
   adminBotSendVerifyEmbed,
-  adminExportCSV
+  adminExportCSV, adminLogs, adminUpdateOrderNotes
 } from '../api/client'
 import { ShoppingBag, Users, Tag, Ban, BarChart2, RefreshCw, Trash2, UserX, UserCheck, LogIn, Key, Copy, CheckCircle2, Monitor, RotateCcw, Bot, Hash, Shield, Ticket, Send, Megaphone, X, Download, Search, TrendingUp, ClipboardList, Edit2, Check } from 'lucide-react'
-import { adminLogs, adminUpdateOrderNotes } from '../api/client'
 
 const TABS = ['Commandes', 'Clients', 'Coupons', 'Blacklist', 'Licences', 'HWIDs', 'Bot', 'Logs']
 const LIC_DURATIONS = [
@@ -454,8 +453,8 @@ export default function AdminPage() {
                     <td className="py-3 pr-4 max-w-[160px]">
                       {editingNote === o.id ? (
                         <div className="flex items-center gap-1">
-                          <input autoFocus className="input text-xs py-1 px-2 flex-1" value={noteValue} onChange={e => setNoteValue(e.target.value)} onKeyDown={async e => { if (e.key === 'Enter') { await adminUpdateOrderNotes(o.id, noteValue); setOrders(prev => prev.map(x => x.id === o.id ? { ...x, notes: noteValue } : x)); setEditingNote(null) } if (e.key === 'Escape') setEditingNote(null) }} />
-                          <button onClick={async () => { await adminUpdateOrderNotes(o.id, noteValue); setOrders(prev => prev.map(x => x.id === o.id ? { ...x, notes: noteValue } : x)); setEditingNote(null) }} className="text-green-400 hover:text-green-300"><Check size={12} /></button>
+                          <input autoFocus className="input text-xs py-1 px-2 flex-1" value={noteValue} onChange={e => setNoteValue(e.target.value)} onKeyDown={async e => { if (e.key === 'Enter') { try { await adminUpdateOrderNotes(o.id, noteValue); setOrders(prev => prev.map(x => x.id === o.id ? { ...x, notes: noteValue } : x)); setEditingNote(null) } catch { alert('Erreur lors de la sauvegarde') } } if (e.key === 'Escape') setEditingNote(null) }} />
+                          <button onClick={async () => { try { await adminUpdateOrderNotes(o.id, noteValue); setOrders(prev => prev.map(x => x.id === o.id ? { ...x, notes: noteValue } : x)); setEditingNote(null) } catch { alert('Erreur lors de la sauvegarde') } }} className="text-green-400 hover:text-green-300"><Check size={12} /></button>
                         </div>
                       ) : (
                         <button onClick={() => { setEditingNote(o.id); setNoteValue(o.notes || '') }} className="flex items-center gap-1 text-surface-500 hover:text-white transition-colors text-xs group">
