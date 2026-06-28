@@ -202,7 +202,7 @@ async function fetchLatestVersion() {
 }
 
 app.get('/api/version', async (req, res) => {
-  const TTL = 300_000 // 5 minutes
+  const TTL = 300_000
   if (Date.now() - _versionCache.at < TTL) return res.json({ version: _versionCache.value })
   try { await fetchLatestVersion() } catch {}
   res.json({ version: _versionCache.value })
@@ -327,7 +327,6 @@ const DISCORD_CLIENT_ID     = process.env.DISCORD_OAUTH_CLIENT_ID || '1512458990
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_OAUTH_CLIENT_SECRET || 'mPB_0wD_2iP9Ud_z9nLmvzoEJD1jLgox'
 const DISCORD_REDIRECT_URI  = process.env.DISCORD_OAUTH_REDIRECT || 'https://rustservermanagerpro.com/api/auth/discord/callback'
 
-// Stockage temporaire des états OAuth (token JWT → state)
 const oauthStates = new Map()
 
 app.get('/api/auth/discord', (req, res) => {
@@ -337,7 +336,7 @@ app.get('/api/auth/discord', (req, res) => {
   try { customerId = jwt.verify(token, JWT_SECRET).sub } catch { return res.status(401).json({ detail: 'Token invalide' }) }
   const state = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
   oauthStates.set(state, customerId)
-  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000) // expire après 10 min
+  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000)
   const url = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${state}`
   res.redirect(url)
 })
@@ -469,16 +468,6 @@ app.delete('/api/admin/orders/:id', adminMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-app.delete('/api/admin/orders/:id', adminMiddleware, async (req, res) => {
-  try {
-    const o = await db.get('SELECT * FROM orders WHERE id = ?', [req.params.id])
-    if (!o) return res.status(404).json({ detail: 'Introuvable' })
-    if (o.license_key) await axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${o.license_key}`, { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET } }).catch(() => {})
-    await db.run('DELETE FROM orders WHERE id = ?', [o.id])
-    res.json({ ok: true })
-  } catch(e) { res.status(500).json({ detail: e.message }) }
-})
-
 app.get('/api/admin/customers', adminMiddleware, async (req, res) => {
   try { res.json(await db.all('SELECT id, email, name, banned, created_at FROM customers ORDER BY created_at DESC')) }
   catch(e) { res.status(500).json({ detail: e.message }) }
@@ -488,7 +477,6 @@ app.post('/api/admin/customers/:id/ban', adminMiddleware, async (req, res) => {
   try {
     const c = await db.get('SELECT email FROM customers WHERE id=?', [req.params.id])
     await db.run('UPDATE customers SET banned=1 WHERE id=?', [req.params.id])
-    // Revoke all active licenses
     const orders = await db.all("SELECT license_key FROM orders WHERE customer_id=? AND status='paid' AND license_key != ''", [req.params.id])
     for (const o of orders) {
       axios.delete(`${process.env.LICENSE_SERVER_URL}/admin/keys/${o.license_key}`, { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET } }).catch(() => {})
@@ -584,7 +572,7 @@ app.delete('/api/admin/manual-licenses/:key', adminMiddleware, async (req, res) 
   } catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-// ── Bot control routes ──────────────────────────────────────────────────────
+// ── Bot control routes
 app.get('/api/admin/bot/stats', adminMiddleware, (req, res) => {
   try { res.json(getBotStats()) }
   catch(e) { res.status(500).json({ detail: e.message }) }
@@ -694,11 +682,12 @@ app.delete('/api/admin/keys/:key/activations', adminMiddleware, async (req, res)
   }
 })
 
+// Supprime la clé entière du license server (pas juste les activations)
 app.delete('/api/admin/keys/:key', adminMiddleware, async (req, res) => {
   try {
     const key = req.params.key
     await axios.delete(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/activations`,
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}`,
       { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
     )
     await db.run("UPDATE orders SET status='revoked' WHERE license_key = ?", [key])
@@ -716,7 +705,6 @@ app.post('/api/admin/bot/welcome-config', adminMiddleware, (req, res) => {
   catch(e) { res.status(500).json({ detail: e.message }) }
 })
 
-// Public status endpoint
 app.get('/api/status', async (req, res) => {
   const botStats = getBotStats()
   let licenseOk = false
@@ -744,7 +732,6 @@ app.get("/download", (req, res) => {
   res.redirect(302, url)
 })
 
-
 app.use(express.static(path.join(__dirname, 'frontend', 'dist')))
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html')))
 
@@ -769,8 +756,7 @@ async function checkExpiringLicenses() {
 
 init().then(() => {
   app.listen(PORT, () => console.log(`RSM Shop running on port ${PORT}`))
-  startBot()
-  // Vérification des licences expirant dans 3 jours — toutes les 24h
+  startBot(db)
   setInterval(checkExpiringLicenses, 24 * 60 * 60 * 1000)
   setTimeout(checkExpiringLicenses, 5000)
 }).catch(e => {
