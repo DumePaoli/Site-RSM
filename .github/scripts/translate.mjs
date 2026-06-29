@@ -37,8 +37,11 @@ const LANG_NAMES = {
 // ── Parse i18n.js ────────────────────────────────────────────────────────────
 
 function parseTranslations(content) {
-  // Strip export keywords so vm can evaluate the file
-  const stripped = content.replace(/^export /gm, '')
+  // Strip export keywords and const/let/var from top-level declarations
+  // so vm.runInNewContext adds them to the sandbox context object
+  const stripped = content
+    .replace(/^export /gm, '')
+    .replace(/\b(?:const|let|var)\s+(translations)\s*=/g, '$1 =')
   const ctx = {}
   vm.runInNewContext(stripped, ctx)
   if (!ctx.translations) throw new Error('Could not parse translations object')
