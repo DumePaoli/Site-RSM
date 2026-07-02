@@ -697,6 +697,7 @@ app.delete('/api/admin/keys/:key/activations', adminMiddleware, async (req, res)
   }
 })
 
+// Supprime la clé entière du license server (pas juste les activations)
 app.delete('/api/admin/keys/:key', adminMiddleware, async (req, res) => {
   try {
     const key = req.params.key

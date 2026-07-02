@@ -111,6 +111,8 @@ async function init() {
   await db.run('ALTER TABLE customers ADD COLUMN IF NOT EXISTS discord_id VARCHAR(30) DEFAULT NULL').catch(() => {})
   try { await db.exec('ALTER TABLE orders ADD COLUMN hwid VARCHAR(512) DEFAULT NULL') } catch {}
 
+  try { await db.exec('ALTER TABLE orders ADD COLUMN hwid VARCHAR(512) DEFAULT NULL') } catch {}
+
   const count = await db.get('SELECT COUNT(*) as c FROM products')
   if (!count || count.c === 0) {
     await db.run('INSERT INTO products (name, slug, price, duration, description) VALUES (?,?,?,?,?)', ['RSM Pro — 1 Mois',  '1m',       9.99,  '1m',       'Accès complet 1 mois'])
