@@ -16,6 +16,7 @@ import CGVPage from './pages/CGVPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import ChangelogPage from './pages/ChangelogPage'
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
               <Route path="/confidentialite" element={<PrivacyPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password"  element={<ResetPasswordPage />} />
+              <Route path="/changelog"       element={<ChangelogPage />} />
             </Routes>
           </main>
           <Footer />

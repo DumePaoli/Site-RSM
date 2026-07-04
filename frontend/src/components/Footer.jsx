@@ -56,6 +56,7 @@ export default function Footer() {
             <Link to="/cgv" className="hover:text-white transition-colors">CGV</Link>
             <Link to="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
             <Link to="/status" className="hover:text-white transition-colors">Statut</Link>
+            <Link to="/changelog" className="hover:text-white transition-colors">Changelog</Link>
             <p>{t('footer.disclaimer', lang)}</p>
           </div>
         </div>

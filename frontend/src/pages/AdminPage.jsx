@@ -195,6 +195,16 @@ export default function AdminPage() {
     }
   }
 
+  const deleteKey = async (key) => {
+    if (!confirm(`Supprimer définitivement la clé ${key} ?`)) return
+    try {
+      await adminRevokeKey(key)
+      setHwids(prev => prev.filter(x => x.key !== key))
+    } catch(e) {
+      alert(e.response?.data?.detail || 'Erreur lors de la suppression')
+    }
+  }
+
   const clearActivations = async (key) => {
     if (!confirm(`Effacer toutes les activations de ${key} ?\nL'utilisateur devra réactiver sur ses machines.`)) return
     try {
@@ -691,7 +701,7 @@ export default function AdminPage() {
                     </button>
                   )}
                   {!h.active && (
-                    <button onClick={async () => { await adminRevokeKey(h.key).catch(() => {}); setHwids(prev => prev.filter(x => x.key !== h.key)) }} className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-surface-700 hover:bg-surface-600 text-surface-400 border border-surface-600 rounded-lg transition-colors">
+                    <button onClick={() => deleteKey(h.key)} className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-surface-700 hover:bg-surface-600 text-surface-400 border border-surface-600 rounded-lg transition-colors">
                       <Trash2 size={12} /> Supprimer
                     </button>
                   )}
