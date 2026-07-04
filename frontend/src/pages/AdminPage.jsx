@@ -5,7 +5,7 @@ import {
   adminCoupons, adminCreateCoupon, adminDeleteCoupon,
   adminBlacklist, adminAddBlacklist, adminRemoveBlacklist,
   adminGenerateLicense, adminManualLicenses, adminDeleteManualLicense, adminDeleteOrder,
-  adminHwids, adminResetHwid, adminRevokeKey, adminClearActivations, adminRefreshVersion,
+  adminHwids, adminResetHwid, adminRevokeKey, adminDeleteKeyPermanent, adminClearActivations, adminRefreshVersion,
   adminBotStats, adminBotChannels, adminBotTickets,
   adminBotCloseTicket, adminBotSendEmbed, adminBotAnnounceRelease,
   adminBotSendTicketEmbed, adminBotGetWelcomeConfig, adminBotSetWelcomeConfig,
@@ -196,9 +196,9 @@ export default function AdminPage() {
   }
 
   const deleteKey = async (key) => {
-    if (!confirm(`Supprimer définitivement la clé ${key} ?`)) return
+    if (!confirm(`Supprimer définitivement la clé ${key} ?\nCette action est irréversible.`)) return
     try {
-      await adminRevokeKey(key)
+      await adminDeleteKeyPermanent(key)
       setHwids(prev => prev.filter(x => x.key !== key))
     } catch(e) {
       alert(e.response?.data?.detail || 'Erreur lors de la suppression')

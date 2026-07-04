@@ -62,6 +62,7 @@ export const adminBotDebug = () => api.get('/api/admin/bot/debug').then(r => r.d
 export const adminHwids = () => api.get('/api/admin/hwids').then(r => r.data)
 export const adminResetHwid = (key) => api.post(`/api/admin/hwids/${key}/reset`).then(r => r.data)
 export const adminRevokeKey = (key) => api.delete(`/api/admin/keys/${key}`).then(r => r.data)
+export const adminDeleteKeyPermanent = (key) => api.delete(`/api/admin/keys/${key}/permanent`).then(r => r.data)
 export const adminClearActivations = (key) => api.delete(`/api/admin/keys/${key}/activations`).then(r => r.data)
 export const adminRefreshVersion = () => api.post('/api/admin/refresh-version').then(r => r.data)
 export const adminBotGetWelcomeConfig = () => api.get('/api/admin/bot/welcome-config').then(r => r.data)
