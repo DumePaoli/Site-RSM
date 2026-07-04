@@ -570,7 +570,7 @@ app.delete('/api/admin/manual-licenses/:key', adminMiddleware, async (req, res) 
   try {
     const key = req.params.key
     await axios.delete(
-      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}`,
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/permanent`,
       { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
     ).catch(() => {})
     await db.run('DELETE FROM manual_licenses WHERE license_key=?', [key])
@@ -697,7 +697,7 @@ app.delete('/api/admin/keys/:key/activations', adminMiddleware, async (req, res)
   }
 })
 
-// Supprime la clé entière du license server (pas juste les activations)
+// Révoque (désactive) la clé sur le license server — réversible via /restore
 app.delete('/api/admin/keys/:key', adminMiddleware, async (req, res) => {
   try {
     const key = req.params.key
@@ -706,6 +706,22 @@ app.delete('/api/admin/keys/:key', adminMiddleware, async (req, res) => {
       { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
     )
     await db.run("UPDATE orders SET status='revoked' WHERE license_key = ?", [key])
+    res.json({ ok: true })
+  } catch(e) {
+    res.status(e.response?.status || 500).json({ detail: e.response?.data?.message || e.response?.data?.detail || e.message })
+  }
+})
+
+// Supprime définitivement la clé et ses activations (irréversible, contrairement à la révocation ci-dessus)
+app.delete('/api/admin/keys/:key/permanent', adminMiddleware, async (req, res) => {
+  try {
+    const key = req.params.key
+    await axios.delete(
+      `${process.env.LICENSE_SERVER_URL}/admin/keys/${key}/permanent`,
+      { headers: { 'x-admin-secret': process.env.LICENSE_ADMIN_SECRET }, timeout: 15000 }
+    )
+    await db.run("UPDATE orders SET status='revoked' WHERE license_key = ?", [key])
+    await db.run('DELETE FROM manual_licenses WHERE license_key=?', [key])
     res.json({ ok: true })
   } catch(e) {
     res.status(e.response?.status || 500).json({ detail: e.response?.data?.message || e.response?.data?.detail || e.message })
