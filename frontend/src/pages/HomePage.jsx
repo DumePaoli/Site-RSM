@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import {
-  ChevronDown, ChevronRight,
+  ChevronDown,
   ArrowRight, Download, Check, Star, X
 } from 'lucide-react'
 import { getProducts } from '../api/client'
@@ -69,25 +69,6 @@ const REVIEWS = [
 
 /* ──────────────────────────────── COMPONENTS ─────────────────────────────── */
 
-function FeatureCard({ feature, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
-        active
-          ? 'bg-rust-500/10 border-rust-500/50 text-white'
-          : 'bg-white/[0.02] border-white/5 hover:border-white/10 text-surface-400 hover:text-white'
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold">{feature.title}</span>
-        <ChevronRight size={14} className={`transition-transform ${active ? 'rotate-90 text-rust-500' : ''}`} />
-      </div>
-      {active && <p className="text-xs text-surface-400 mt-2 leading-relaxed">{feature.desc}</p>}
-    </button>
-  )
-}
-
 function FAQItem({ q, a, index }) {
   const [open, setOpen] = useState(false)
   return (
@@ -106,7 +87,6 @@ function FAQItem({ q, a, index }) {
 export default function HomePage() {
   const { lang } = useLang()
   const [products, setProducts] = useState([])
-  const [activeFeature, setActiveFeature] = useState(0)
   const [lightbox, setLightbox] = useState(null)
 
   useEffect(() => {
@@ -115,11 +95,6 @@ export default function HomePage() {
       { id: 2, name: 'RSM Pro — 3 Mois',  slug: '3m',       price: 19.99, duration: '3m',       description: 'Meilleure offre' },
       { id: 3, name: 'RSM Pro — À Vie',   slug: 'lifetime', price: 29.99, duration: 'lifetime', description: 'Accès à vie + mises à jour' },
     ]))
-  }, [])
-
-  useEffect(() => {
-    const timer = setInterval(() => setActiveFeature(i => (i + 1) % FEATURES.length), 4000)
-    return () => clearInterval(timer)
   }, [])
 
   const featureKeys = ['dashboard','console','rcon','players','history','bans','whitelist','plugins','wipe','serverSettings','cfg','stats','chat','messages','scheduling','events','backup','discord','servers','settings','installer']
@@ -197,29 +172,21 @@ export default function HomePage() {
             <p className="text-surface-400 text-lg max-w-xl mx-auto">{t('feat.sub', lang)}</p>
           </div>
 
-          <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
-            <div className="grid sm:grid-cols-2 gap-2">
-              {translatedFeatures.map((f, i) => (
-                <FeatureCard
-                  key={f.slug}
-                  feature={f}
-                  active={activeFeature === i}
-                  onClick={() => setActiveFeature(i)}
-                />
-              ))}
-            </div>
-
-            <div className="lg:sticky lg:top-28">
-              <button
-                onClick={() => setLightbox(translatedFeatures[activeFeature].preview.props.src)}
-                className="block w-full rounded-xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50 hover:border-rust-500/50 transition-colors cursor-zoom-in"
-              >
-                {translatedFeatures[activeFeature].preview}
-              </button>
-              <p className="text-center text-xs text-surface-500 mt-3">
-                {translatedFeatures[activeFeature].desc}
-              </p>
-            </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {translatedFeatures.map((f) => (
+              <div key={f.slug} className="rounded-2xl border border-white/8 bg-white/[0.02] overflow-hidden hover:border-white/20 transition-colors">
+                <button
+                  onClick={() => setLightbox(f.preview.props.src)}
+                  className="block w-full aspect-video overflow-hidden cursor-zoom-in group"
+                >
+                  <img src={f.preview.props.src} alt={f.preview.props.alt} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" />
+                </button>
+                <div className="p-4">
+                  <h3 className="text-sm font-bold text-white mb-1.5">{f.title}</h3>
+                  <p className="text-xs text-surface-400 leading-relaxed">{f.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
