@@ -29,6 +29,12 @@ const translations = {
     'feat.title':     'Un outil. Tout contrôler.',
     'feat.sub':       'Chaque module est conçu pour éliminer une tâche répétitive de votre quotidien d\'admin.',
 
+    'feat.cat.server': 'Serveur & Monitoring',
+    'feat.cat.mod':    'Joueurs & Modération',
+    'feat.cat.auto':   'Automatisation',
+    'feat.cat.com':    'Communication',
+    'feat.cat.config': 'Configuration',
+
     'feat.dashboard.title': 'Dashboard',
     'feat.dashboard.desc':  'Vue d\'ensemble en temps réel — statut du serveur, joueurs connectés, CPU/RAM, graphique de fréquentation, redémarrage auto sur crash. Tout sur un seul écran.',
     'feat.console.title':   'Console',
@@ -216,6 +222,12 @@ const translations = {
     'feat.label':     'Features',
     'feat.title':     'One tool. Full control.',
     'feat.sub':       'Every module is built to eliminate a repetitive task from your admin routine.',
+
+    'feat.cat.server': 'Server & Monitoring',
+    'feat.cat.mod':    'Players & Moderation',
+    'feat.cat.auto':   'Automation',
+    'feat.cat.com':    'Communication',
+    'feat.cat.config': 'Configuration',
 
     'feat.dashboard.title': 'Dashboard',
     'feat.dashboard.desc':  'Real-time server overview — status, connected players, CPU/RAM, player graph, auto-restart on crash. Everything on one screen.',
