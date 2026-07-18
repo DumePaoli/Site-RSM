@@ -11,29 +11,47 @@ import { t } from '../i18n'
 /* ─────────────────────────────────── DATA ────────────────────────────────── */
 
 const SCREENSHOTS = {
-  dashboard:  '/dashboard.png',
-  console:    '/console.png',
-  rcon:       '/rcon.png',
-  players:    '/joueurs.png',
-  wipe:       '/wipe.png',
-  backup:     '/save.png',
-  discord:    '/discord.png',
-  plugins:    '/plugins.png',
-  scheduling: '/programtion.png',
-  settings:   '/r%C3%A9glages.png',
-  servers:    '/servers.png',
+  dashboard:      '/dashboard.png',
+  console:        '/console.png',
+  rcon:           '/rcon.png',
+  players:        '/joueurs.png',
+  history:        '/historique.png',
+  bans:           '/ban.png',
+  whitelist:      '/whitelist.png',
+  plugins:        '/plugins.png',
+  wipe:           '/wipe.png',
+  serverSettings: '/parametre%20serveur.png',
+  chat:           '/chat.png',
+  messages:       '/message.png',
+  scheduling:     '/programation.png',
+  events:         '/event.png',
+  backup:         '/save.png',
+  discord:        '/discord.png',
+  servers:        '/servers.png',
+  settings:       '/r%C3%A9glages.png',
+  installer:      '/installateru.png',
 }
 
 const FEATURES = [
-  { slug: 'dashboard',  title: 'Dashboard',        desc: '', color: '', preview: <img src={SCREENSHOTS.dashboard}  alt="Dashboard"  className="w-full rounded-lg" /> },
-  { slug: 'console',    title: 'Console RCON',     desc: '', color: '', preview: <img src={SCREENSHOTS.rcon}       alt="RCON"       className="w-full rounded-lg" /> },
-  { slug: 'players',    title: 'Gestion joueurs',  desc: '', color: '', preview: <img src={SCREENSHOTS.players}   alt="Joueurs"    className="w-full rounded-lg" /> },
-  { slug: 'wipe',       title: 'Wipe Manager',     desc: '', color: '', preview: <img src={SCREENSHOTS.wipe}      alt="Wipe"       className="w-full rounded-lg" /> },
-  { slug: 'backup',     title: 'Sauvegardes auto', desc: '', color: '', preview: <img src={SCREENSHOTS.backup}    alt="Sauvegardes" className="w-full rounded-lg" /> },
-  { slug: 'discord',    title: 'Discord Bot',      desc: '', color: '', preview: <img src={SCREENSHOTS.discord}   alt="Discord"    className="w-full rounded-lg" /> },
-  { slug: 'plugins',    title: 'Plugin Manager',   desc: '', color: '', preview: <img src={SCREENSHOTS.plugins}   alt="Plugins"    className="w-full rounded-lg" /> },
-  { slug: 'monitoring', title: 'Monitoring',       desc: '', color: '', preview: <img src={SCREENSHOTS.scheduling} alt="Monitoring" className="w-full rounded-lg" /> },
-  { slug: 'autostart',  title: 'Auto-redémarrage', desc: '', color: '', preview: <img src={SCREENSHOTS.settings}  alt="Réglages"   className="w-full rounded-lg" /> },
+  { slug: 'dashboard',      title: 'Dashboard',            desc: '', color: '', preview: <img src={SCREENSHOTS.dashboard}      alt="Dashboard"        className="w-full rounded-lg" /> },
+  { slug: 'console',        title: 'Console',              desc: '', color: '', preview: <img src={SCREENSHOTS.console}        alt="Console"          className="w-full rounded-lg" /> },
+  { slug: 'rcon',           title: 'RCON',                 desc: '', color: '', preview: <img src={SCREENSHOTS.rcon}            alt="RCON"             className="w-full rounded-lg" /> },
+  { slug: 'players',        title: 'Gestion joueurs',      desc: '', color: '', preview: <img src={SCREENSHOTS.players}         alt="Joueurs"          className="w-full rounded-lg" /> },
+  { slug: 'history',        title: 'Historique',           desc: '', color: '', preview: <img src={SCREENSHOTS.history}         alt="Historique"       className="w-full rounded-lg" /> },
+  { slug: 'bans',           title: 'Bannissements',        desc: '', color: '', preview: <img src={SCREENSHOTS.bans}            alt="Bannissements"    className="w-full rounded-lg" /> },
+  { slug: 'whitelist',      title: 'Whitelist',            desc: '', color: '', preview: <img src={SCREENSHOTS.whitelist}       alt="Whitelist"        className="w-full rounded-lg" /> },
+  { slug: 'plugins',        title: 'Plugin Manager',       desc: '', color: '', preview: <img src={SCREENSHOTS.plugins}         alt="Plugins"          className="w-full rounded-lg" /> },
+  { slug: 'wipe',           title: 'Wipe Manager',         desc: '', color: '', preview: <img src={SCREENSHOTS.wipe}            alt="Wipe"             className="w-full rounded-lg" /> },
+  { slug: 'serverSettings', title: 'Paramètres serveur',   desc: '', color: '', preview: <img src={SCREENSHOTS.serverSettings}  alt="Paramètres serveur" className="w-full rounded-lg" /> },
+  { slug: 'chat',           title: 'Chat',                 desc: '', color: '', preview: <img src={SCREENSHOTS.chat}            alt="Chat"             className="w-full rounded-lg" /> },
+  { slug: 'messages',       title: 'Messages programmés',  desc: '', color: '', preview: <img src={SCREENSHOTS.messages}        alt="Messages"         className="w-full rounded-lg" /> },
+  { slug: 'scheduling',     title: 'Programmation',        desc: '', color: '', preview: <img src={SCREENSHOTS.scheduling}      alt="Programmation"    className="w-full rounded-lg" /> },
+  { slug: 'events',         title: 'Événements',           desc: '', color: '', preview: <img src={SCREENSHOTS.events}          alt="Événements"       className="w-full rounded-lg" /> },
+  { slug: 'backup',         title: 'Sauvegardes auto',     desc: '', color: '', preview: <img src={SCREENSHOTS.backup}          alt="Sauvegardes"      className="w-full rounded-lg" /> },
+  { slug: 'discord',        title: 'Discord Bot',          desc: '', color: '', preview: <img src={SCREENSHOTS.discord}         alt="Discord"          className="w-full rounded-lg" /> },
+  { slug: 'servers',        title: 'Multi-serveurs',       desc: '', color: '', preview: <img src={SCREENSHOTS.servers}         alt="Serveurs"         className="w-full rounded-lg" /> },
+  { slug: 'settings',       title: 'Réglages',             desc: '', color: '', preview: <img src={SCREENSHOTS.settings}        alt="Réglages"         className="w-full rounded-lg" /> },
+  { slug: 'installer',      title: 'Installateur',         desc: '', color: '', preview: <img src={SCREENSHOTS.installer}       alt="Installateur"     className="w-full rounded-lg" /> },
 ]
 
 const REVIEWS = [
@@ -100,7 +118,7 @@ export default function HomePage() {
     return () => clearInterval(timer)
   }, [])
 
-  const featureKeys = ['dashboard','console','players','wipe','backup','discord','plugins','monitoring','autostart']
+  const featureKeys = ['dashboard','console','rcon','players','history','bans','whitelist','plugins','wipe','serverSettings','chat','messages','scheduling','events','backup','discord','servers','settings','installer']
   const translatedFeatures = FEATURES.map((f, i) => ({
     ...f,
     title: t(`feat.${featureKeys[i]}.title`, lang),
