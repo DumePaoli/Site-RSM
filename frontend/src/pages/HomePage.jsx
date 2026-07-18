@@ -20,16 +20,18 @@ const SCREENSHOTS = {
   whitelist:      '/whitelist.png',
   plugins:        '/plugins.png',
   wipe:           '/wipe.png',
-  serverSettings: '/parametre%20serveur.png',
+  serverSettings: '/paramtre%20serv.png',
+  cfg:            '/serv.cfg.png',
+  stats:          '/stats.png',
   chat:           '/chat.png',
-  messages:       '/message.png',
-  scheduling:     '/programation.png',
-  events:         '/event.png',
+  messages:       '/messages.png',
+  scheduling:     '/programmation.png',
+  events:         '/%C3%A9v%C3%A8nement.png',
   backup:         '/save.png',
   discord:        '/discord.png',
   servers:        '/servers.png',
   settings:       '/r%C3%A9glages.png',
-  installer:      '/installateru.png',
+  installer:      '/install.png',
 }
 
 const FEATURES = [
@@ -43,6 +45,8 @@ const FEATURES = [
   { slug: 'plugins',        title: 'Plugin Manager',       desc: '', color: '', preview: <img src={SCREENSHOTS.plugins}         alt="Plugins"          className="w-full rounded-lg" /> },
   { slug: 'wipe',           title: 'Wipe Manager',         desc: '', color: '', preview: <img src={SCREENSHOTS.wipe}            alt="Wipe"             className="w-full rounded-lg" /> },
   { slug: 'serverSettings', title: 'Paramètres serveur',   desc: '', color: '', preview: <img src={SCREENSHOTS.serverSettings}  alt="Paramètres serveur" className="w-full rounded-lg" /> },
+  { slug: 'cfg',            title: 'Éditeur server.cfg',   desc: '', color: '', preview: <img src={SCREENSHOTS.cfg}             alt="server.cfg"       className="w-full rounded-lg" /> },
+  { slug: 'stats',          title: 'Statistiques',         desc: '', color: '', preview: <img src={SCREENSHOTS.stats}           alt="Statistiques"     className="w-full rounded-lg" /> },
   { slug: 'chat',           title: 'Chat',                 desc: '', color: '', preview: <img src={SCREENSHOTS.chat}            alt="Chat"             className="w-full rounded-lg" /> },
   { slug: 'messages',       title: 'Messages programmés',  desc: '', color: '', preview: <img src={SCREENSHOTS.messages}        alt="Messages"         className="w-full rounded-lg" /> },
   { slug: 'scheduling',     title: 'Programmation',        desc: '', color: '', preview: <img src={SCREENSHOTS.scheduling}      alt="Programmation"    className="w-full rounded-lg" /> },
@@ -118,7 +122,7 @@ export default function HomePage() {
     return () => clearInterval(timer)
   }, [])
 
-  const featureKeys = ['dashboard','console','rcon','players','history','bans','whitelist','plugins','wipe','serverSettings','chat','messages','scheduling','events','backup','discord','servers','settings','installer']
+  const featureKeys = ['dashboard','console','rcon','players','history','bans','whitelist','plugins','wipe','serverSettings','cfg','stats','chat','messages','scheduling','events','backup','discord','servers','settings','installer']
   const translatedFeatures = FEATURES.map((f, i) => ({
     ...f,
     title: t(`feat.${featureKeys[i]}.title`, lang),
