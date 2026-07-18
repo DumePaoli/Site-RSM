@@ -35,27 +35,35 @@ const SCREENSHOTS = {
 }
 
 const FEATURES = [
-  { slug: 'dashboard',      title: 'Dashboard',            desc: '', color: '', preview: <img src={SCREENSHOTS.dashboard}      alt="Dashboard"        className="w-full rounded-lg" /> },
-  { slug: 'console',        title: 'Console',              desc: '', color: '', preview: <img src={SCREENSHOTS.console}        alt="Console"          className="w-full rounded-lg" /> },
-  { slug: 'rcon',           title: 'RCON',                 desc: '', color: '', preview: <img src={SCREENSHOTS.rcon}            alt="RCON"             className="w-full rounded-lg" /> },
-  { slug: 'players',        title: 'Gestion joueurs',      desc: '', color: '', preview: <img src={SCREENSHOTS.players}         alt="Joueurs"          className="w-full rounded-lg" /> },
-  { slug: 'history',        title: 'Historique',           desc: '', color: '', preview: <img src={SCREENSHOTS.history}         alt="Historique"       className="w-full rounded-lg" /> },
-  { slug: 'bans',           title: 'Bannissements',        desc: '', color: '', preview: <img src={SCREENSHOTS.bans}            alt="Bannissements"    className="w-full rounded-lg" /> },
-  { slug: 'whitelist',      title: 'Whitelist',            desc: '', color: '', preview: <img src={SCREENSHOTS.whitelist}       alt="Whitelist"        className="w-full rounded-lg" /> },
-  { slug: 'plugins',        title: 'Plugin Manager',       desc: '', color: '', preview: <img src={SCREENSHOTS.plugins}         alt="Plugins"          className="w-full rounded-lg" /> },
-  { slug: 'wipe',           title: 'Wipe Manager',         desc: '', color: '', preview: <img src={SCREENSHOTS.wipe}            alt="Wipe"             className="w-full rounded-lg" /> },
-  { slug: 'serverSettings', title: 'Paramètres serveur',   desc: '', color: '', preview: <img src={SCREENSHOTS.serverSettings}  alt="Paramètres serveur" className="w-full rounded-lg" /> },
-  { slug: 'cfg',            title: 'Éditeur server.cfg',   desc: '', color: '', preview: <img src={SCREENSHOTS.cfg}             alt="server.cfg"       className="w-full rounded-lg" /> },
-  { slug: 'stats',          title: 'Statistiques',         desc: '', color: '', preview: <img src={SCREENSHOTS.stats}           alt="Statistiques"     className="w-full rounded-lg" /> },
-  { slug: 'chat',           title: 'Chat',                 desc: '', color: '', preview: <img src={SCREENSHOTS.chat}            alt="Chat"             className="w-full rounded-lg" /> },
-  { slug: 'messages',       title: 'Messages programmés',  desc: '', color: '', preview: <img src={SCREENSHOTS.messages}        alt="Messages"         className="w-full rounded-lg" /> },
-  { slug: 'scheduling',     title: 'Programmation',        desc: '', color: '', preview: <img src={SCREENSHOTS.scheduling}      alt="Programmation"    className="w-full rounded-lg" /> },
-  { slug: 'events',         title: 'Événements',           desc: '', color: '', preview: <img src={SCREENSHOTS.events}          alt="Événements"       className="w-full rounded-lg" /> },
-  { slug: 'backup',         title: 'Sauvegardes auto',     desc: '', color: '', preview: <img src={SCREENSHOTS.backup}          alt="Sauvegardes"      className="w-full rounded-lg" /> },
-  { slug: 'discord',        title: 'Discord Bot',          desc: '', color: '', preview: <img src={SCREENSHOTS.discord}         alt="Discord"          className="w-full rounded-lg" /> },
-  { slug: 'servers',        title: 'Multi-serveurs',       desc: '', color: '', preview: <img src={SCREENSHOTS.servers}         alt="Serveurs"         className="w-full rounded-lg" /> },
-  { slug: 'settings',       title: 'Réglages',             desc: '', color: '', preview: <img src={SCREENSHOTS.settings}        alt="Réglages"         className="w-full rounded-lg" /> },
-  { slug: 'installer',      title: 'Installateur',         desc: '', color: '', preview: <img src={SCREENSHOTS.installer}       alt="Installateur"     className="w-full rounded-lg" /> },
+  { slug: 'dashboard',      cat: 'server', title: 'Dashboard',            desc: '', color: '', preview: <img src={SCREENSHOTS.dashboard}      alt="Dashboard"        className="w-full rounded-lg" /> },
+  { slug: 'console',        cat: 'server', title: 'Console',              desc: '', color: '', preview: <img src={SCREENSHOTS.console}        alt="Console"          className="w-full rounded-lg" /> },
+  { slug: 'rcon',           cat: 'server', title: 'RCON',                 desc: '', color: '', preview: <img src={SCREENSHOTS.rcon}            alt="RCON"             className="w-full rounded-lg" /> },
+  { slug: 'stats',          cat: 'server', title: 'Statistiques',         desc: '', color: '', preview: <img src={SCREENSHOTS.stats}           alt="Statistiques"     className="w-full rounded-lg" /> },
+  { slug: 'serverSettings', cat: 'server', title: 'Paramètres serveur',   desc: '', color: '', preview: <img src={SCREENSHOTS.serverSettings}  alt="Paramètres serveur" className="w-full rounded-lg" /> },
+  { slug: 'cfg',            cat: 'server', title: 'Éditeur server.cfg',   desc: '', color: '', preview: <img src={SCREENSHOTS.cfg}             alt="server.cfg"       className="w-full rounded-lg" /> },
+  { slug: 'players',        cat: 'mod',    title: 'Gestion joueurs',      desc: '', color: '', preview: <img src={SCREENSHOTS.players}         alt="Joueurs"          className="w-full rounded-lg" /> },
+  { slug: 'history',        cat: 'mod',    title: 'Historique',           desc: '', color: '', preview: <img src={SCREENSHOTS.history}         alt="Historique"       className="w-full rounded-lg" /> },
+  { slug: 'bans',           cat: 'mod',    title: 'Bannissements',        desc: '', color: '', preview: <img src={SCREENSHOTS.bans}            alt="Bannissements"    className="w-full rounded-lg" /> },
+  { slug: 'whitelist',      cat: 'mod',    title: 'Whitelist',            desc: '', color: '', preview: <img src={SCREENSHOTS.whitelist}       alt="Whitelist"        className="w-full rounded-lg" /> },
+  { slug: 'wipe',           cat: 'auto',   title: 'Wipe Manager',         desc: '', color: '', preview: <img src={SCREENSHOTS.wipe}            alt="Wipe"             className="w-full rounded-lg" /> },
+  { slug: 'scheduling',     cat: 'auto',   title: 'Programmation',        desc: '', color: '', preview: <img src={SCREENSHOTS.scheduling}      alt="Programmation"    className="w-full rounded-lg" /> },
+  { slug: 'events',         cat: 'auto',   title: 'Événements',           desc: '', color: '', preview: <img src={SCREENSHOTS.events}          alt="Événements"       className="w-full rounded-lg" /> },
+  { slug: 'backup',         cat: 'auto',   title: 'Sauvegardes auto',     desc: '', color: '', preview: <img src={SCREENSHOTS.backup}          alt="Sauvegardes"      className="w-full rounded-lg" /> },
+  { slug: 'chat',           cat: 'com',    title: 'Chat',                 desc: '', color: '', preview: <img src={SCREENSHOTS.chat}            alt="Chat"             className="w-full rounded-lg" /> },
+  { slug: 'messages',       cat: 'com',    title: 'Messages programmés',  desc: '', color: '', preview: <img src={SCREENSHOTS.messages}        alt="Messages"         className="w-full rounded-lg" /> },
+  { slug: 'discord',        cat: 'com',    title: 'Discord Bot',          desc: '', color: '', preview: <img src={SCREENSHOTS.discord}         alt="Discord"          className="w-full rounded-lg" /> },
+  { slug: 'plugins',        cat: 'config', title: 'Plugin Manager',       desc: '', color: '', preview: <img src={SCREENSHOTS.plugins}         alt="Plugins"          className="w-full rounded-lg" /> },
+  { slug: 'servers',        cat: 'config', title: 'Multi-serveurs',       desc: '', color: '', preview: <img src={SCREENSHOTS.servers}         alt="Serveurs"         className="w-full rounded-lg" /> },
+  { slug: 'settings',       cat: 'config', title: 'Réglages',             desc: '', color: '', preview: <img src={SCREENSHOTS.settings}        alt="Réglages"         className="w-full rounded-lg" /> },
+  { slug: 'installer',      cat: 'config', title: 'Installateur',         desc: '', color: '', preview: <img src={SCREENSHOTS.installer}       alt="Installateur"     className="w-full rounded-lg" /> },
+]
+
+const FEATURE_CATEGORIES = [
+  { key: 'server', label: 'Serveur & Monitoring' },
+  { key: 'mod',    label: 'Joueurs & Modération' },
+  { key: 'auto',   label: 'Automatisation' },
+  { key: 'com',    label: 'Communication' },
+  { key: 'config', label: 'Configuration' },
 ]
 
 const REVIEWS = [
@@ -97,12 +105,13 @@ export default function HomePage() {
     ]))
   }, [])
 
-  const featureKeys = ['dashboard','console','rcon','players','history','bans','whitelist','plugins','wipe','serverSettings','cfg','stats','chat','messages','scheduling','events','backup','discord','servers','settings','installer']
-  const translatedFeatures = FEATURES.map((f, i) => ({
+  const [activeCat, setActiveCat] = useState('server')
+  const translatedFeatures = FEATURES.map((f) => ({
     ...f,
-    title: t(`feat.${featureKeys[i]}.title`, lang),
-    desc:  t(`feat.${featureKeys[i]}.desc`,  lang),
+    title: t(`feat.${f.slug}.title`, lang),
+    desc:  t(`feat.${f.slug}.desc`,  lang),
   }))
+  const shownFeatures = translatedFeatures.filter(f => f.cat === activeCat)
 
   const faqItems = Array.from({ length: 7 }, (_, i) => ({
     q: t(`faq.q${i+1}`, lang),
@@ -172,8 +181,24 @@ export default function HomePage() {
             <p className="text-surface-400 text-lg max-w-xl mx-auto">{t('feat.sub', lang)}</p>
           </div>
 
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
+            {FEATURE_CATEGORIES.map(c => (
+              <button
+                key={c.key}
+                onClick={() => setActiveCat(c.key)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
+                  activeCat === c.key
+                    ? 'bg-rust-500/15 border-rust-500/50 text-white'
+                    : 'bg-white/[0.02] border-white/8 text-surface-400 hover:text-white hover:border-white/20'
+                }`}
+              >
+                {t(`feat.cat.${c.key}`, lang)}
+              </button>
+            ))}
+          </div>
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {translatedFeatures.map((f) => (
+            {shownFeatures.map((f) => (
               <div key={f.slug} className="rounded-2xl border border-white/8 bg-white/[0.02] overflow-hidden hover:border-white/20 transition-colors">
                 <button
                   onClick={() => setLightbox(f.preview.props.src)}
