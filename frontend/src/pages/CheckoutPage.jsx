@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { CheckCircle2, Tag, CreditCard, ArrowRight, Lock, LogIn } from 'lucide-react'
-import { getProducts, checkCoupon, createCheckout } from '../api/client'
+import { CheckCircle2, Tag, CreditCard, ArrowRight, Lock, LogIn, Wallet } from 'lucide-react'
+import { getProducts, checkCoupon, createCheckout, capturePayPal } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import { useLang } from '../contexts/LangContext'
 import { t } from '../i18n'
@@ -19,6 +19,9 @@ export default function CheckoutPage() {
   const [couponError, setCouponErr]   = useState('')
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('stripe')
+  const [paypalOrder, setPaypalOrder] = useState(null) // { order_id, client_id, amount, currency }
+  const paypalContainerRef = useRef(null)
 
   useEffect(() => {
     getProducts().then(setProducts).catch(() => {
@@ -72,13 +75,18 @@ export default function CheckoutPage() {
   const submit = async () => {
     setLoading(true)
     setError('')
+    setPaypalOrder(null)
     try {
       const r = await createCheckout({
         product_slug: selectedPlan,
         coupon_code: couponResult ? coupon : '',
-        payment_method: 'stripe',
+        payment_method: paymentMethod,
       })
       if (r.free) { window.location.href = `/success?order=${r.order_id}`; return }
+      if (paymentMethod === 'paypal') {
+        setPaypalOrder({ order_id: r.order_id, client_id: r.paypal_client_id, amount: r.amount, currency: r.currency })
+        return
+      }
       window.location.href = r.checkout_url
     } catch (e) {
       setError(e.response?.data?.detail || 'Erreur lors du paiement')
@@ -86,6 +94,40 @@ export default function CheckoutPage() {
       setLoading(false)
     }
   }
+
+  // Charge le SDK PayPal et affiche les boutons une fois la commande créée côté serveur.
+  useEffect(() => {
+    if (!paypalOrder || !paypalContainerRef.current) return
+    paypalContainerRef.current.innerHTML = ''
+
+    const renderButtons = () => {
+      if (!window.paypal || !paypalContainerRef.current) return
+      window.paypal.Buttons({
+        createOrder: (_data, actions) => actions.order.create({
+          purchase_units: [{ amount: { value: paypalOrder.amount.toFixed(2), currency_code: paypalOrder.currency } }],
+        }),
+        onApprove: async (data) => {
+          setLoading(true)
+          try {
+            await capturePayPal({ order_id: paypalOrder.order_id, paypal_order_id: data.orderID })
+            window.location.href = `/success?order=${paypalOrder.order_id}`
+          } catch (e) {
+            setError(e.response?.data?.detail || 'Erreur lors de la capture du paiement PayPal')
+            setLoading(false)
+          }
+        },
+        onError: () => setError('Erreur PayPal — réessayez.'),
+      }).render(paypalContainerRef.current)
+    }
+
+    const existing = document.getElementById('paypal-sdk')
+    if (existing) { renderButtons(); return }
+    const script = document.createElement('script')
+    script.id = 'paypal-sdk'
+    script.src = `https://www.paypal.com/sdk/js?client-id=${paypalOrder.client_id}&currency=${paypalOrder.currency}`
+    script.onload = renderButtons
+    document.body.appendChild(script)
+  }, [paypalOrder])
 
   return (
     <div className="min-h-screen py-16 px-4">
@@ -164,9 +206,25 @@ export default function CheckoutPage() {
             {/* Payment method */}
             <div className="card">
               <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">{t('checkout.payment', lang)}</h2>
-              <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-rust-500 bg-rust-500/10">
-                <CreditCard size={18} className="text-rust-500" />
-                <span className="font-semibold text-sm text-white">{t('checkout.payment.stripe', lang)}</span>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => { setPaymentMethod('stripe'); setPaypalOrder(null); setError('') }}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                    paymentMethod === 'stripe' ? 'border-rust-500 bg-rust-500/10' : 'border-surface-700 bg-surface-750 hover:border-surface-600'
+                  }`}
+                >
+                  <CreditCard size={18} className={paymentMethod === 'stripe' ? 'text-rust-500' : 'text-surface-400'} />
+                  <span className="font-semibold text-sm text-white">{t('checkout.payment.stripe', lang)}</span>
+                </button>
+                <button
+                  onClick={() => { setPaymentMethod('paypal'); setPaypalOrder(null); setError('') }}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                    paymentMethod === 'paypal' ? 'border-rust-500 bg-rust-500/10' : 'border-surface-700 bg-surface-750 hover:border-surface-600'
+                  }`}
+                >
+                  <Wallet size={18} className={paymentMethod === 'paypal' ? 'text-rust-500' : 'text-surface-400'} />
+                  <span className="font-semibold text-sm text-white">PayPal</span>
+                </button>
               </div>
             </div>
           </div>
@@ -212,15 +270,19 @@ export default function CheckoutPage() {
                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">{error}</div>
               )}
 
-              <button
-                onClick={submit}
-                disabled={loading || !product}
-                className="btn-primary w-full justify-center text-base py-4 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? t('checkout.loading', lang) : (
-                  <><Lock size={16} /> {t('checkout.pay', lang)} {total.toFixed(2).replace('.', ',')} € <ArrowRight size={16} /></>
-                )}
-              </button>
+              {paymentMethod === 'paypal' && paypalOrder ? (
+                <div ref={paypalContainerRef} />
+              ) : (
+                <button
+                  onClick={submit}
+                  disabled={loading || !product}
+                  className="btn-primary w-full justify-center text-base py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? t('checkout.loading', lang) : (
+                    <><Lock size={16} /> {t('checkout.pay', lang)} {total.toFixed(2).replace('.', ',')} € <ArrowRight size={16} /></>
+                  )}
+                </button>
+              )}
 
               <p className="text-center text-surface-400 text-xs flex items-center justify-center gap-1">
                 <Lock size={11} /> {t('checkout.ssl', lang)}
