@@ -168,6 +168,17 @@ export default function CheckoutPage() {
                 <CreditCard size={18} className="text-rust-500" />
                 <span className="font-semibold text-sm text-white">{t('checkout.payment.stripe', lang)}</span>
               </div>
+              <p className="text-surface-400 text-xs mt-3">
+                {t('checkout.payment.other', lang)}{' '}
+                <a
+                  href="https://discord.gg/gbEGEaT9Qr"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-rust-400 hover:text-rust-300 transition-colors font-medium"
+                >
+                  {t('checkout.payment.other.link', lang)}
+                </a>.
+              </p>
             </div>
           </div>
 
