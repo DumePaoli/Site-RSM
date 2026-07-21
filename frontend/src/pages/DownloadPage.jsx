@@ -1,6 +1,6 @@
 import { Download } from 'lucide-react'
 
-const DOWNLOAD_URL = 'https://github.com/DumePaoli/RSM-Releases/releases/latest/download/Rust.Server.Manager.Pro.exe'
+const DOWNLOAD_URL = 'https://github.com/DumePaoli/RSM-Releases/releases/latest/download/RustServerManagerPro.exe'
 
 export default function DownloadPage() {
   return (
