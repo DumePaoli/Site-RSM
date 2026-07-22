@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { getProducts } from '../api/client'
 import { useLang } from '../contexts/LangContext'
+import { useSEO } from '../hooks/useSEO'
 import { t } from '../i18n'
 
 /* ─────────────────────────────────── DATA ────────────────────────────────── */
@@ -96,6 +97,12 @@ export default function HomePage() {
   const { lang } = useLang()
   const [products, setProducts] = useState([])
   const [lightbox, setLightbox] = useState(null)
+
+  useSEO(
+    'Rust Server Manager Pro — Gérez votre serveur Rust',
+    'Application Windows tout-en-un pour gérer votre serveur Rust. Démarrage, RCON, sauvegardes, plugins, Discord bot et plus.',
+    ''
+  )
 
   useEffect(() => {
     getProducts().then(setProducts).catch(() => setProducts([

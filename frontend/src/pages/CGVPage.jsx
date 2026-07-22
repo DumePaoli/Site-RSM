@@ -1,4 +1,11 @@
+import { useSEO } from '../hooks/useSEO'
+
 export default function CGVPage() {
+  useSEO(
+    'Conditions Générales de Vente — Rust Server Manager Pro',
+    'Conditions générales de vente de Rust Server Manager Pro.',
+    '/cgv'
+  )
   return (
     <div className="min-h-screen py-16 px-4">
       <div className="max-w-3xl mx-auto prose prose-invert">

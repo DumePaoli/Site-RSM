@@ -1,4 +1,11 @@
+import { useSEO } from '../hooks/useSEO'
+
 export default function PrivacyPage() {
+  useSEO(
+    'Politique de Confidentialité — Rust Server Manager Pro',
+    'Politique de confidentialité et protection des données de Rust Server Manager Pro.',
+    '/confidentialite'
+  )
   return (
     <div className="min-h-screen py-16 px-4">
       <div className="max-w-3xl mx-auto prose prose-invert">
