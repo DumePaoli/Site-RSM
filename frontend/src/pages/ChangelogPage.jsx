@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLang } from '../contexts/LangContext'
+import { useSEO } from '../hooks/useSEO'
 import axios from 'axios'
 
 const BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3000')
@@ -29,6 +30,12 @@ export default function ChangelogPage() {
   const { lang } = useLang()
   const [releases, setReleases] = useState(null)
   const [error, setError] = useState(false)
+
+  useSEO(
+    'Changelog — Rust Server Manager Pro',
+    'Historique des mises à jour et nouveautés de Rust Server Manager Pro.',
+    '/changelog'
+  )
 
   useEffect(() => {
     axios.get(`${BASE}/api/releases`)

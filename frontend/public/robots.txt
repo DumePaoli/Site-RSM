@@ -1,8 +1,13 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /bot
 Disallow: /dashboard
 Disallow: /checkout
+Disallow: /success
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
 Disallow: /reset-password
 
 Sitemap: https://rustservermanagerpro.com/sitemap.xml

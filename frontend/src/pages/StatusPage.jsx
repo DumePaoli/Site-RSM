@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLang } from '../contexts/LangContext'
+import { useSEO } from '../hooks/useSEO'
 import axios from 'axios'
 
 const BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3000')
@@ -14,6 +15,12 @@ export default function StatusPage() {
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [lastCheck, setLastCheck] = useState(null)
+
+  useSEO(
+    'Statut des services — Rust Server Manager Pro',
+    'État en temps réel des services Rust Server Manager Pro : site, API de licences, bot Discord.',
+    '/status'
+  )
 
   async function fetchStatus() {
     setLoading(true)
