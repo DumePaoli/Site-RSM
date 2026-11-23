@@ -269,7 +269,7 @@ app.post('/api/checkout/create', checkoutLimiter, authMiddleware, async (req, re
         payment_method_types: ['card'],
         line_items: [{ price_data: { currency: product.currency, product_data: { name: product.name }, unit_amount: Math.round(amount * 100) }, quantity: 1 }],
         mode: 'payment', customer_email: email,
-        metadata: { order_id: String(orderId) },
+        metadata: { order_id: String(orderId), shop: 'rsm' },
         success_url: `${process.env.FRONTEND_URL}/success?order=${orderId}`,
         cancel_url: `${process.env.FRONTEND_URL}/checkout?cancelled=1`,
       })
@@ -303,7 +303,11 @@ app.post('/api/webhooks/stripe', async (req, res) => {
   try { event = getStripe().webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET) }
   catch { return res.status(400).send('Invalid signature') }
   if (event.type === 'checkout.session.completed') {
-    const orderId = parseInt(event.data.object.metadata?.order_id)
+    const obj = event.data.object
+    // The Stripe account is shared with other shops (Dumex): ignore their payments.
+    // Sessions created before this check carry no marker and belong to this shop.
+    if ((obj.metadata?.shop && obj.metadata.shop !== 'rsm') || obj.payment_status !== 'paid') return res.json({ ok: true, ignored: true })
+    const orderId = parseInt(obj.metadata?.order_id)
     if (orderId) await fulfillOrder(orderId)
   }
   res.json({ ok: true })
